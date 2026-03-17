@@ -287,6 +287,8 @@ const CONFIG = {
   tryNext();
 })();
 </script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -668,130 +670,154 @@ function showPage(p){
 function updateSettingsForm(){document.getElementById('s-prefix').value=cfg.prefix;document.getElementById('s-ext').value=cfg.ext;}
 function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},isErr?5000:2500);}
 
-// ── Barcode (Code 128C) ───────────────────────────────────────────────────────
-var C128=[[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],[2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1],[2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1],[2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1],[4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4],[2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1]];
-var STOP=[2,3,3,1,1,1,2];
-
-function makeBarSVG(sscc,scale,height){
-  scale=scale||2;height=height||55;
-  var digits=sscc.replace(/\D/g,'');
-  var vals=[105];var chk=105;var pos=1;
-  for(var i=0;i<digits.length;i+=2){var v=parseInt(digits.substring(i,i+2));vals.push(v);chk+=v*pos;pos++;}
-  chk=chk%103;vals.push(chk);
-  var bars=[];
-  vals.forEach(function(v){C128[v].forEach(function(b){bars.push(b);});});
-  STOP.forEach(function(b){bars.push(b);});
-  var q=6,tw=bars.reduce(function(a,b){return a+b;},0)*scale+q*2;
-  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+tw+'" height="'+(height+q*2)+'" viewBox="0 0 '+tw+' '+(height+q*2)+'" style="display:block;margin:0 auto"><rect width="'+tw+'" height="'+(height+q*2)+'" fill="white"/>';
-  var x=q;bars.forEach(function(b,i){if(i%2===0)svg+='<rect x="'+x+'" y="'+q+'" width="'+(b*scale)+'" height="'+height+'" fill="black"/>';x+=b*scale;});
-  return svg+'</svg>';
-}
-
-// Make barcode for TUC (encode as string using Code 128B for non-paired digits)
-function makeTUCBarSVG(tuc){
-  // Use same Code128C approach but encode TUC as numeric pairs
-  return makeBarSVG(tuc,1.5,40);
-}
-
-// ── Print ─────────────────────────────────────────────────────────────────────
 function doPrint(recs){
-  var area=document.getElementById('print-area');
-  area.innerHTML='';
-
-  recs.forEach(function(r){
-    var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'—';
-    var casesDisp=r.cases||'—';
-    var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'—';
-    var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
-    var ssccFmt=fmtSSCC(r.sscc);
-
-    var div=document.createElement('div');
-    div.className='lpage';
-    div.innerHTML=
-      '<div class="l-header">'+
-        '<div class="l-title">SAUCE SHOP PALLET LABEL</div>'+
-        '<div class="l-addr">UNIT 2/3 CENTURION WAY, NOTTINGHAM, NG2 1RW</div>'+
-      '</div>'+
-
-      '<div class="l-row cols2">'+
-        '<div class="l-cell"><div class="lbl">Name</div><div class="val">'+r.name+'</div></div>'+
-        '<div class="l-cell"><div class="lbl">SKU</div><div class="val">'+r.sku+'</div></div>'+
-      '</div>'+
-
-      '<div class="l-row cols4">'+
-        '<div class="l-cell"><div class="lbl">Units per Case</div><div class="val">'+(r.unitsPerCase||'—')+' Case</div></div>'+
-        '<div class="l-cell"><div class="lbl">Cases on Pallet</div><div class="val">'+casesDisp+'</div></div>'+
-        '<div class="l-cell"><div class="lbl">Case Weight</div><div class="val">'+caseWeightDisp+'</div></div>'+
-        '<div class="l-cell"><div class="lbl">Total Weight</div><div class="val">'+totalWeight+'</div></div>'+
-      '</div>'+
-
-      '<div class="l-row">'+
-        '<div class="l-cell"><div class="lbl">Information</div><div class="val" style="font-size:9pt;font-weight:normal">'+r.info+'</div></div>'+
-      '</div>'+
-
-      '<div class="l-row cols2">'+
-        '<div class="l-cell"><div class="lbl">Batch</div><div class="val">'+r.batch+'</div></div>'+
-        '<div class="l-cell"><div class="lbl">TUC</div><div class="val">'+r.tuc+'</div></div>'+
-      '</div>'+
-
-      (r.tuc?'<div class="l-barcode-top">'+makeTUCBarSVG(r.tuc)+'</div>':'')+
-
-      '<div class="l-sku-bbe">'+
-        '<div><div class="lbl" style="font-size:9pt;font-weight:bold">SKU:</div><div class="val big">'+r.sku+'</div></div>'+
-        '<div><div class="lbl" style="font-size:9pt;font-weight:bold">BBE:</div><div class="val big">'+fmtBBE(r.bbe)+'</div></div>'+
-      '</div>'+
-
-      '<div class="l-barcode-bot">'+
-        makeBarSVG(r.sscc,2,60)+
-        '<div class="l-sscc-text">'+ssccFull+'</div>'+
-      '</div>';
-
-    area.appendChild(div);
+  // Generate PDF using jsPDF
+  var doc = new window.jspdf.jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a5'
   });
 
-  // Build a data URL and navigate to it in a new tab — user presses Ctrl+P
-  var labelCSS=
-    '*{box-sizing:border-box;margin:0;padding:0}'+
-    'body{background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;padding:10mm}'+
-    '@media print{body{background:#fff;padding:0}}'+
-    '.noprint{background:#1c1c1a;color:#fff;font-family:Arial,sans-serif;font-size:13px;padding:12px 20px;margin-bottom:8mm;border-radius:6px;display:flex;align-items:center;gap:12px;justify-content:space-between}'+
-    '@media print{.noprint{display:none!important}}'+
-    '.lpage{width:148mm;min-height:210mm;border:1px solid #000;margin:0 auto 8mm;background:#fff;page-break-after:always;display:flex;flex-direction:column}'+
-    '.lpage:last-child{page-break-after:avoid;margin-bottom:0}'+
-    '.l-header{background:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;text-align:center;padding:4mm 5mm 3mm}'+
-    '.l-title{font-size:14pt;font-weight:bold;letter-spacing:.05em}'+
-    '.l-addr{font-size:8pt;margin-top:1mm}'+
-    '.l-row{border-bottom:1px solid #000;padding:3mm 5mm;display:grid;font-size:9pt}'+
-    '.l-row.cols2{grid-template-columns:1fr 1fr;gap:6mm}'+
-    '.l-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;gap:3mm}'+
-    '.l-cell .lbl{font-size:7pt;color:#555;margin-bottom:1mm}'+
-    '.l-cell .val{font-size:10pt;font-weight:bold;color:#000}'+
-    '.l-cell .val.big{font-size:28pt;font-weight:900}'+
-    '.l-barcode-top{border-bottom:1px solid #000;padding:2mm 5mm;text-align:center}'+
-    '.l-barcode-bot{padding:3mm 5mm;text-align:center;margin-top:auto}'+
-    '.l-sscc-text{font-size:9pt;font-family:"Courier New",monospace;letter-spacing:.1em;font-weight:bold;margin-top:1mm}'+
-    '.l-sku-bbe{border-bottom:1px solid #000;padding:4mm 5mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm;align-items:center}'+
-    '.lbl{font-size:7pt;color:#555;margin-bottom:1mm}'+
-    '.val{font-size:10pt;font-weight:bold;color:#000}'+
-    '.val.big{font-size:28pt;font-weight:900}';
+  recs.forEach(function(r, pageIndex){
+    if(pageIndex > 0) doc.addPage('a5','portrait');
 
-  var count=recs.length;
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sauce Shop Pallet Label</title><style>'+labelCSS+'</style></head><body>';
-  html+='<div class="noprint"><span>'+count+' label'+(count!==1?'s':'')+' ready — press <strong>Ctrl+P</strong> (or Cmd+P on Mac) to print, then close this tab</span><button onclick="window.print()" style="background:#fff;color:#1c1c1a;border:none;border-radius:5px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Print now</button></div>';
-  html+=area.innerHTML;
-  html+='</body></html>';
+    var totalWeight = r.cases && r.caseWeight ? (parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG' : '-';
+    var casesDisp = r.cases || '-';
+    var caseWeightDisp = r.caseWeight ? r.caseWeight+' KG' : '-';
+    var ssccFull = '(00)'+r.sscc+'(37)'+r.cases;
+    var bbeDisp = fmtBBE(r.bbe);
 
-  // Encode as data URL and open in new tab
-  var encoded='data:text/html;charset=utf-8,'+encodeURIComponent(html);
-  var tab=window.open(encoded,'_blank');
-  if(!tab){
-    // If popup still blocked, offer download instead
-    toast('Pop-ups blocked — downloading label as HTML file instead',true);
-    var a=document.createElement('a');
-    a.href=encoded;
-    a.download='sauce-shop-label-'+new Date().toISOString().slice(0,10)+'.html';
-    a.click();
+    var W = 148; // A5 width mm
+    var y = 0;
+
+    // Header — black bar
+    doc.setFillColor(0,0,0);
+    doc.rect(0, y, W, 16, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text('SAUCE SHOP PALLET LABEL', W/2, y+7, {align:'center'});
+    doc.setFontSize(7);
+    doc.setFont('helvetica','normal');
+    doc.text('UNIT 2/3 CENTURION WAY, NOTTINGHAM, NG2 1RW', W/2, y+12, {align:'center'});
+    y += 16;
+
+    // Helper to draw a section divider line
+    function divider(yy){ doc.setDrawColor(0); doc.line(0, yy, W, yy); }
+    function label(txt, x, yy){ doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.text(txt.toUpperCase(), x, yy); }
+    function value(txt, x, yy, size){ doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(size||9); doc.text(String(txt||'-'), x, yy); }
+
+    // Row: Name + SKU
+    divider(y);
+    label('Name', 4, y+5);
+    value(r.name, 4, y+10);
+    label('SKU', W/2+2, y+5);
+    value(r.sku, W/2+2, y+10);
+    y += 15;
+
+    // Row: Units/case, Cases on pallet, Case weight, Total weight
+    divider(y);
+    var cols = [4, W/4+2, W/2+2, W*3/4+2];
+    label('Units per Case', cols[0], y+4);
+    value((r.unitsPerCase||'-'), cols[0], y+9);
+    label('Cases on Pallet', cols[1], y+4);
+    value(casesDisp, cols[1], y+9);
+    label('Case Weight', cols[2], y+4);
+    value(caseWeightDisp, cols[2], y+9);
+    label('Total Weight', cols[3], y+4);
+    value(totalWeight, cols[3], y+9);
+    y += 14;
+
+    // Row: Information
+    divider(y);
+    label('Information', 4, y+4);
+    doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.text(String(r.info||'-'), 4, y+9, {maxWidth: W-8});
+    y += 14;
+
+    // Row: Batch + TUC
+    divider(y);
+    label('Batch', 4, y+4);
+    value(r.batch, 4, y+9);
+    label('TUC', W/2+2, y+4);
+    value(r.tuc||'-', W/2+2, y+9);
+    y += 14;
+
+    // TUC barcode (small)
+    if(r.tuc){
+      divider(y);
+      var tucBarcode = getBarcodeData(r.tuc);
+      drawBarcode(doc, tucBarcode, W/2, y+2, 90, 8, true);
+      y += 14;
+    }
+
+    // SKU + BBE large
+    divider(y);
+    doc.setFillColor(255,255,255);
+    label('SKU:', 4, y+5);
+    doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(26);
+    doc.text(r.sku, 16, y+18);
+    label('BBE:', W/2+2, y+5);
+    doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(26);
+    doc.text(bbeDisp, W/2+14, y+18);
+    y += 24;
+
+    // SSCC barcode (large, bottom)
+    divider(y);
+    var ssccBarcode = getBarcodeData(r.sscc);
+    drawBarcode(doc, ssccBarcode, W/2, y+2, 120, 20, true);
+    y += 26;
+
+    // SSCC text
+    doc.setTextColor(0,0,0); doc.setFont('courier','bold'); doc.setFontSize(8);
+    doc.text(ssccFull, W/2, y+4, {align:'center'});
+    y += 8;
+
+    // Footer
+    divider(y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
+    doc.text('Generated: '+fmtDate(r.ts), 4, y+4);
+    doc.text('By: '+(r.generatedBy||''), W-4, y+4, {align:'right'});
+  });
+
+  // Save
+  var filename = 'pallet-label-'+(recs.length===1?recs[0].sku+'-'+recs[0].batch:'batch-'+recs.length)+'.pdf';
+  doc.save(filename);
+  toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
+}
+
+// ── Code 128C barcode data ────────────────────────────────────────────────────
+var C128_PATTERNS=[[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],[2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1],[2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1],[2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1],[4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4],[2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1]];
+var C128_STOP=[2,3,3,1,1,1,2];
+
+function getBarcodeData(sscc){
+  var digits=sscc.replace(/\D/g,'');
+  var vals=[105]; var chk=105; var pos=1;
+  for(var i=0;i<digits.length;i+=2){
+    var v=parseInt(digits.substring(i,i+2));
+    vals.push(v); chk+=v*pos; pos++;
   }
+  chk=chk%103; vals.push(chk);
+  var bars=[];
+  vals.forEach(function(v){C128_PATTERNS[v].forEach(function(b){bars.push(b);});});
+  C128_STOP.forEach(function(b){bars.push(b);});
+  return bars;
+}
+
+function drawBarcode(doc, bars, centerX, startY, totalWidthMM, heightMM, withQuiet){
+  var totalUnits = bars.reduce(function(a,b){return a+b;},0);
+  var quiet = withQuiet ? 2 : 0;
+  var unitW = (totalWidthMM - quiet*2) / totalUnits;
+  var x = centerX - totalWidthMM/2 + quiet;
+  doc.setFillColor(255,255,255);
+  doc.rect(centerX - totalWidthMM/2, startY, totalWidthMM, heightMM, 'F');
+  bars.forEach(function(b,i){
+    if(i%2===0){
+      doc.setFillColor(0,0,0);
+      doc.rect(x, startY, b*unitW, heightMM, 'F');
+    }
+    x += b*unitW;
+  });
 }
 </script>
 </body>
