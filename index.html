@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sauce Shop Pallet Labels</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f4;color:#1c1c1a;font-size:15px}
+.app{max-width:900px;margin:0 auto;padding:1.25rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+.user-bar{display:flex;align-items:center;gap:10px;font-size:13px;color:#555}
+.user-bar button{height:30px;padding:0 14px;font-size:12px;border:1px solid #d0d0ce;border-radius:6px;background:#fff;cursor:pointer}
+.nav{display:flex;gap:3px;background:#e8e7e4;border-radius:8px;padding:3px}
+.nav button{height:30px;padding:0 14px;font-size:13px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#666;font-weight:500}
+.nav button.active{background:#fff;color:#1c1c1a;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.card{background:#fff;border:1px solid #e8e7e4;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:.85rem}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;color:#666;font-weight:500}
+.field input,.field select{height:42px;padding:0 12px;font-size:15px;border:1px solid #d8d8d5;border-radius:8px;background:#fff;color:#1c1c1a;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:#555;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 20px;font-size:14px;font-weight:500;border:1px solid #d8d8d5;border-radius:8px;background:#fff;color:#1c1c1a;cursor:pointer;white-space:nowrap;gap:6px}
+.btn:hover{background:#f5f5f4}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:#1c1c1a;color:#fff;border-color:#1c1c1a}
+.btn.primary:hover{background:#333}
+.btn.danger{color:#c0392b;border-color:#f5c6c6}
+.btn.sm{height:30px;padding:0 12px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.product-preview{background:#f9f9f8;border:1px solid #e8e7e4;border-radius:8px;padding:12px 14px;font-size:13px;color:#555;margin-bottom:12px;line-height:1.7;min-height:48px}
+.product-preview strong{color:#1c1c1a}
+.sscc-box{font-family:'Courier New',monospace;font-size:16px;font-weight:700;letter-spacing:.08em;padding:10px 14px;background:#f5f5f4;border-radius:8px;border:1px solid #e0e0dd;display:inline-block}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:8px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid #f0f0ee;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafaf9}
+.mono{font-family:'Courier New',monospace;font-size:11px}
+.empty{padding:3rem;text-align:center;color:#bbb;font-size:13px}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;background:#f0f0ee;color:#777;border:1px solid #e5e5e2}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+.stat{background:#fff;border:1px solid #e8e7e4;border-radius:10px;padding:1rem}
+.stat .num{font-size:26px;font-weight:600}
+.stat .lbl{font-size:12px;color:#888;margin-top:3px}
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filter-row input,.filter-row select{height:34px;padding:0 10px;font-size:13px;border:1px solid #d8d8d5;border-radius:7px;background:#fff}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1c1c1a;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;max-width:320px}
+.toast.show{opacity:1}
+.toast.error{background:#c0392b}
+.signin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px}
+.signin-screen h2{font-size:22px;font-weight:600}
+.signin-screen p{font-size:14px;color:#666;max-width:400px;line-height:1.7}
+.err-box{background:#fff5f5;border:1px solid #fcc;border-radius:8px;padding:12px 16px;font-size:13px;color:#c0392b;margin-top:8px;max-width:440px;line-height:1.6;text-align:left}
+.queue-card{display:none}
+.tab-row{display:flex;gap:4px;margin-bottom:1rem}
+.tab{height:32px;padding:0 14px;font-size:13px;border:1px solid transparent;border-radius:7px;cursor:pointer;background:transparent;color:#888;font-weight:500}
+.tab.active{border-color:#d8d8d5;color:#1c1c1a;background:#f5f5f4}
+
+/* ── PRINT STYLES ─────────────────────────────────────────────── */
+@media print {
+  html, body { margin:0; padding:0; background:#fff; }
+  body > *:not(#print-area) { display:none !important; }
+  #print-area {
+    display:block !important;
+    margin:0; padding:0;
+  }
+  .lpage {
+    width:148mm;
+    min-height:210mm;
+    border:1px solid #000;
+    font-family:Arial,Helvetica,sans-serif;
+    margin:0 auto;
+    background:#fff;
+    page-break-after:always;
+    display:flex;
+    flex-direction:column;
+  }
+  .lpage:last-child { page-break-after:avoid; }
+  .l-header {
+    background:#000 !important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    color:#fff !important;
+    text-align:center;
+    padding:4mm 5mm 3mm;
+  }
+  .l-header .l-title { font-size:14pt; font-weight:bold; letter-spacing:.05em; }
+  .l-header .l-addr  { font-size:8pt; margin-top:1mm; }
+  .l-row { border-bottom:1px solid #000; padding:3mm 5mm; display:grid; font-size:9pt; }
+  .l-row.cols2 { grid-template-columns:1fr 1fr; gap:6mm; }
+  .l-row.cols3 { grid-template-columns:1fr 1fr 1fr; gap:4mm; }
+  .l-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; gap:3mm; }
+  .l-cell .lbl { font-size:7pt; color:#555; margin-bottom:1mm; }
+  .l-cell .val { font-size:10pt; font-weight:bold; color:#000; }
+  .l-cell .val.big { font-size:28pt; font-weight:900; }
+  .l-barcode-top { border-bottom:1px solid #000; padding:2mm 5mm; text-align:center; }
+  .l-barcode-bot { padding:3mm 5mm; text-align:center; margin-top:auto; }
+  .l-sscc-text { font-size:9pt; font-family:'Courier New',monospace; letter-spacing:.1em; font-weight:bold; margin-top:1mm; }
+  .l-sku-bbe { border-bottom:1px solid #000; padding:4mm 5mm; display:grid; grid-template-columns:1fr 1fr; gap:4mm; align-items:center; }
+}
+#print-area { display:none; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+  CONFIGURATION
+================================================================ -->
+<script>
+const CONFIG = {
+  clientId:  "5e0f988d-48b0-4fa0-b6ff-8f962641dfe1",
+  tenantId:  "05a4eeee-7b33-4587-8a42-9ae3006b8b9e",
+  siteUrl:   "https://sauceshop.sharepoint.com/sites/Operations",
+  labelsListName:   "PalletLabels",
+  counterListName:  "PalletCounter",
+  productsListName: "PalletProducts",
+};
+</script>
+
+<div id="print-area"></div>
+
+<div class="app" id="main-app" style="display:none">
+  <div class="topbar">
+    <div>
+      <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
+      <div class="nav">
+        <button class="active" onclick="showPage('generate')">Generate</button>
+        <button onclick="showPage('history')">History</button>
+        <button onclick="showPage('settings')">Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATE PAGE -->
+  <div id="page-generate">
+    <div class="card">
+      <div class="sec-label">Next SSCC</div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+        <div class="sscc-box" id="sscc-preview">Loading…</div>
+        <span style="font-size:12px;color:#aaa" id="serial-info"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-label">Label details</div>
+
+      <div class="field">
+        <label>SKU *</label>
+        <select id="f-sku" onchange="onSKUChange()">
+          <option value="">— select a product —</option>
+        </select>
+      </div>
+
+      <div class="product-preview" id="product-preview">Product details will appear here once you select a SKU.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field">
+          <label>Batch number *</label>
+          <input id="f-batch" type="text" placeholder="e.g. B240315">
+        </div>
+        <div class="field">
+          <label>Best before (BBE) *</label>
+          <input id="f-bbe" type="month" placeholder="YYYY-MM">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cases on pallet <span style="color:#aaa;font-weight:400">(overrides product default)</span></label>
+        <input id="f-cases" type="number" placeholder="Leave blank to use product default">
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btn-gp" onclick="generateAndPrint()">Generate &amp; print label</button>
+        <button class="btn" id="btn-aq" onclick="addToQueue()">Add to queue</button>
+      </div>
+    </div>
+
+    <div class="card" id="queue-card" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+        <span style="font-weight:600;font-size:14px">Print queue <span class="badge" id="queue-count">0</span></span>
+        <div class="actions" style="margin-top:0">
+          <button class="btn sm" onclick="clearQueue()">Clear</button>
+          <button class="btn primary sm" onclick="printQueue()">Print all</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><div id="queue-body"></div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div id="page-history" style="display:none">
+    <div class="stat-grid">
+      <div class="stat"><div class="num" id="stat-total">—</div><div class="lbl">Total labels</div></div>
+      <div class="stat"><div class="num" id="stat-today">—</div><div class="lbl">Today</div></div>
+      <div class="stat"><div class="num" id="stat-serial">—</div><div class="lbl">Last serial used</div></div>
+    </div>
+    <div class="card">
+      <div class="filter-row">
+        <input id="search" type="text" placeholder="Search SKU or product…" oninput="renderHistory()" style="flex:1;min-width:160px">
+        <select id="filter-date" onchange="renderHistory()">
+          <option value="">All time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+        </select>
+        <button class="btn" onclick="loadHistory()">Refresh</button>
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+        <button class="btn" onclick="reprintSelected()">Reprint selected</button>
+      </div>
+      <div class="tbl-wrap"><div id="history-body"><div class="empty">Click Refresh to load history</div></div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div id="page-settings" style="display:none">
+    <div class="card">
+      <div class="sec-label">GS1 configuration</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:160px">
+          <label>GS1 company prefix (7–10 digits)</label>
+          <input id="s-prefix" type="text" maxlength="10" placeholder="e.g. 5012345">
+        </div>
+        <div class="field" style="max-width:150px">
+          <label>Extension digit (0–9)</label>
+          <input id="s-ext" type="number" min="0" max="9">
+        </div>
+      </div>
+      <div style="font-size:12px;color:#aaa;margin:.5rem 0 1rem">Your prefix is on your GS1 UK certificate.</div>
+      <button class="btn primary" onclick="saveSettings()">Save settings</button>
+    </div>
+    <div class="card">
+      <div class="sec-label">Product list</div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Products are managed in your SharePoint list <strong>PalletProducts</strong>. Add, edit or remove products there — changes appear in the SKU dropdown immediately.</div>
+      <button class="btn" onclick="loadProducts()">Reload product list</button>
+      <span style="font-size:12px;color:#aaa;margin-left:10px" id="product-count"></span>
+    </div>
+    <div class="card">
+      <div class="sec-label">Connection</div>
+      <div id="conn-status" style="font-size:13px;color:#888;margin-bottom:10px">Checking…</div>
+      <button class="btn" onclick="testConnection()">Test connection</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN-IN SCREEN -->
+<div class="app" id="signin-screen">
+  <div class="signin-screen">
+    <div style="font-size:40px">📦</div>
+    <h2>Sauce Shop Pallet Labels</h2>
+    <p>Sign in with your Sauce Shop Microsoft 365 account to generate and print GS1 pallet labels.</p>
+    <button class="btn primary" style="height:46px;padding:0 32px;font-size:15px" id="signin-btn" onclick="signIn()">Sign in with Microsoft 365</button>
+    <div id="signin-status" style="font-size:13px;color:#888"></div>
+    <div id="signin-error" class="err-box" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MSAL with fallback CDNs -->
+<script>
+(function(){
+  var cdns=[
+    'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js',
+    'https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js'
+  ];
+  var idx=0;
+  function tryNext(){
+    if(idx>=cdns.length){
+      document.getElementById('signin-error').style.display='block';
+      document.getElementById('signin-error').innerHTML='<strong>Could not load sign-in library.</strong><br>Make sure you are opening this page via its https:// GitHub Pages URL in Microsoft Edge or Chrome. Do not open it as a local file.';
+      document.getElementById('signin-btn').disabled=true;
+      return;
+    }
+    var s=document.createElement('script');
+    s.src=cdns[idx++];
+    s.onload=function(){window._msalLoaded=true;};
+    s.onerror=function(){tryNext();};
+    document.head.appendChild(s);
+  }
+  tryNext();
+})();
+</script>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+var msalApp=null, currentAccount=null;
+var allRecords=[], queue=[], selectedIds=new Set();
+var products={}; // keyed by SKU
+var cfg={prefix:'5012345',ext:3};
+var serialRef=1;
+var siteId=null, labelsListId=null, counterListId=null, counterItemId=null, productsListId=null;
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load',function(){
+  if(CONFIG.clientId==='YOUR_CLIENT_ID_HERE'){
+    document.getElementById('signin-screen').innerHTML='<div style="max-width:480px;margin:4rem auto;text-align:center;padding:2rem"><div style="font-size:36px">⚙️</div><h2 style="font-size:20px;margin:12px 0">Setup required</h2><p style="color:#666;line-height:1.7">Open this file in a text editor and fill in the three CONFIG values: <strong>clientId</strong>, <strong>tenantId</strong>, and <strong>siteUrl</strong>.</p></div>';
+    return;
+  }
+  var attempts=0;
+  var check=setInterval(function(){
+    attempts++;
+    if(window.msal){clearInterval(check);initApp();}
+    else if(attempts>50){clearInterval(check);}
+  },100);
+});
+
+function initApp(){
+  try{
+    msalApp=new msal.PublicClientApplication({
+      auth:{
+        clientId:CONFIG.clientId,
+        authority:'https://login.microsoftonline.com/'+CONFIG.tenantId,
+        redirectUri:window.location.origin+window.location.pathname
+      },
+      cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:true}
+    });
+    var accounts=msalApp.getAllAccounts();
+    if(accounts.length>0){currentAccount=accounts[0];afterSignIn();}
+  }catch(e){showSignInError('Failed to initialise: '+e.message);}
+}
+
+function showSignInError(msg){
+  document.getElementById('signin-status').textContent='';
+  document.getElementById('signin-error').style.display='block';
+  document.getElementById('signin-error').textContent=msg;
+}
+
+async function signIn(){
+  if(!msalApp){showSignInError('Sign-in library not ready — please refresh and try again.');return;}
+  document.getElementById('signin-status').textContent='Opening sign-in window…';
+  document.getElementById('signin-error').style.display='none';
+  try{
+    var r=await msalApp.loginPopup({scopes:['https://graph.microsoft.com/Sites.ReadWrite.All']});
+    currentAccount=r.account;
+    afterSignIn();
+  }catch(e){
+    document.getElementById('signin-status').textContent='';
+    showSignInError('Sign-in failed: '+e.message+'\n\nCheck that the redirect URI in Azure exactly matches: '+window.location.origin+window.location.pathname);
+  }
+}
+
+function signOut(){if(msalApp)msalApp.logoutPopup({account:currentAccount});}
+
+async function afterSignIn(){
+  document.getElementById('signin-screen').style.display='none';
+  document.getElementById('main-app').style.display='';
+  document.getElementById('user-name').textContent=currentAccount.name||currentAccount.username;
+  await resolveSiteAndLists();
+  await Promise.all([loadCounter(),loadProducts()]);
+  updateSSCCPreview();
+}
+
+// ── Graph ─────────────────────────────────────────────────────────────────────
+async function getToken(){
+  var scopes=['https://graph.microsoft.com/Sites.ReadWrite.All'];
+  try{var r=await msalApp.acquireTokenSilent({scopes:scopes,account:currentAccount});return r.accessToken;}
+  catch(e){var r2=await msalApp.acquireTokenPopup({scopes:scopes});return r2.accessToken;}
+}
+async function graph(method,path,body){
+  var token=await getToken();
+  var opts={method:method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  var r=await fetch('https://graph.microsoft.com/v1.0'+path,opts);
+  if(!r.ok){var t=await r.text();throw new Error(r.status+': '+t);}
+  if(r.status===204)return null;
+  return r.json();
+}
+
+async function resolveSiteAndLists(){
+  try{
+    var url=new URL(CONFIG.siteUrl);
+    var data=await graph('GET','/sites/'+url.hostname+':'+url.pathname);
+    siteId=data.id;
+    var lists=await graph('GET','/sites/'+siteId+'/lists?$select=id,name');
+    lists.value.forEach(function(l){
+      if(l.name===CONFIG.labelsListName)labelsListId=l.id;
+      if(l.name===CONFIG.counterListName)counterListId=l.id;
+      if(l.name===CONFIG.productsListName)productsListId=l.id;
+    });
+    var missing=[];
+    if(!labelsListId)missing.push(CONFIG.labelsListName);
+    if(!counterListId)missing.push(CONFIG.counterListName);
+    if(!productsListId)missing.push(CONFIG.productsListName);
+    if(missing.length)throw new Error('Lists not found: '+missing.join(', '));
+    document.getElementById('conn-status').innerHTML='<span style="color:green">✓ Connected — all lists found.</span>';
+  }catch(e){
+    document.getElementById('conn-status').innerHTML='<span style="color:#c0392b">✗ '+e.message+'</span>';
+    toast(e.message,true);
+  }
+}
+async function testConnection(){await resolveSiteAndLists();toast('Connection test done — check Settings for result');}
+
+// ── Products ──────────────────────────────────────────────────────────────────
+async function loadProducts(){
+  if(!productsListId)return;
+  try{
+    var data=await graph('GET','/sites/'+siteId+'/lists/'+productsListId+'/items?$expand=fields&$top=500');
+    products={};
+    var sel=document.getElementById('f-sku');
+    sel.innerHTML='<option value="">— select a product —</option>';
+    data.value.forEach(function(item){
+      var f=item.fields;
+      var sku=f.SKU||f.Title||'';
+      if(!sku)return;
+      products[sku]={
+        sku:sku,
+        name:f.ProductName||'',
+        unitsPerCase:f.UnitsPerCase||'',
+        caseWeight:f.CaseWeight||'',
+        casesOnPallet:f.CasesOnPallet||'',
+        tuc:f.TUC||'',
+        info:f.Info||''
+      };
+      var opt=document.createElement('option');
+      opt.value=sku;
+      opt.textContent=sku+' — '+f.ProductName;
+      sel.appendChild(opt);
+    });
+    document.getElementById('product-count').textContent=data.value.length+' products loaded';
+    toast('Products loaded');
+  }catch(e){toast('Could not load products: '+e.message,true);}
+}
+
+function onSKUChange(){
+  var sku=document.getElementById('f-sku').value;
+  var p=products[sku];
+  var el=document.getElementById('product-preview');
+  if(!p||!sku){el.textContent='Product details will appear here once you select a SKU.';return;}
+  el.innerHTML=
+    '<strong>'+p.name+'</strong><br>'+
+    'Units/case: <strong>'+p.unitsPerCase+'</strong> &nbsp;·&nbsp; '+
+    'Case weight: <strong>'+p.caseWeight+' kg</strong> &nbsp;·&nbsp; '+
+    'Cases/pallet (default): <strong>'+p.casesOnPallet+'</strong><br>'+
+    'TUC: <strong>'+p.tuc+'</strong><br>'+
+    'Info: <strong>'+p.info+'</strong>';
+  // prefill cases
+  document.getElementById('f-cases').placeholder='Default: '+p.casesOnPallet;
+}
+
+// ── Counter ───────────────────────────────────────────────────────────────────
+async function loadCounter(){
+  if(!counterListId)return;
+  try{
+    var data=await graph('GET','/sites/'+siteId+'/lists/'+counterListId+'/items?$expand=fields&$top=1');
+    if(data.value.length>0){
+      var f=data.value[0].fields;
+      counterItemId=data.value[0].id;
+      serialRef=parseInt(f.SerialRef)||1;
+      cfg.prefix=f.GS1Prefix||cfg.prefix;
+      cfg.ext=parseInt(f.ExtDigit)>=0?parseInt(f.ExtDigit):cfg.ext;
+      updateSettingsForm();
+    }else{
+      var created=await graph('POST','/sites/'+siteId+'/lists/'+counterListId+'/items',{fields:{Title:'config',SerialRef:1,GS1Prefix:cfg.prefix,ExtDigit:cfg.ext}});
+      counterItemId=created.id;
+    }
+  }catch(e){toast('Could not load counter: '+e.message,true);}
+}
+
+async function incrementCounter(){
+  serialRef++;
+  if(!counterItemId)return;
+  try{await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{SerialRef:serialRef});}
+  catch(e){toast('Warning: counter not saved — '+e.message,true);}
+}
+
+async function saveSettings(){
+  var p=document.getElementById('s-prefix').value.replace(/\D/g,'');
+  var e=parseInt(document.getElementById('s-ext').value);
+  if(p.length<7||p.length>10){alert('Prefix must be 7–10 digits');return;}
+  if(isNaN(e)||e<0||e>9){alert('Extension digit must be 0–9');return;}
+  cfg.prefix=p;cfg.ext=e;
+  try{
+    await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{GS1Prefix:p,ExtDigit:e});
+    updateSSCCPreview();
+    toast('Settings saved');
+  }catch(e2){toast('Save failed: '+e2.message,true);}
+}
+
+// ── SSCC ──────────────────────────────────────────────────────────────────────
+function gs1Check(d17){var s=0;for(var i=0;i<17;i++)s+=parseInt(d17[i])*(i%2===0?3:1);return(10-(s%10))%10;}
+function buildSSCC(ext,prefix,serial){
+  var sd=17-1-prefix.length;if(sd<1)return null;
+  var sr=String(serial).padStart(sd,'0');
+  var b17=String(ext)+prefix+sr;
+  if(b17.length!==17)return null;
+  return b17+String(gs1Check(b17));
+}
+function fmtSSCC(s){return s.substring(0,2)+' '+s.substring(2,9)+' '+s.substring(9,17)+' '+s.substring(17);}
+function updateSSCCPreview(){
+  var sscc=buildSSCC(cfg.ext,cfg.prefix,serialRef);
+  document.getElementById('sscc-preview').textContent=sscc?fmtSSCC(sscc):'Invalid prefix — check Settings';
+  document.getElementById('serial-info').textContent='Serial ref: '+serialRef;
+}
+async function nextSSCC(){
+  var sscc=buildSSCC(cfg.ext,cfg.prefix,serialRef);
+  await incrementCounter();
+  updateSSCCPreview();
+  return sscc;
+}
+
+// ── Records ───────────────────────────────────────────────────────────────────
+async function saveRecord(rec){
+  if(!labelsListId){toast('Not connected',true);return;}
+  try{
+    await graph('POST','/sites/'+siteId+'/lists/'+labelsListId+'/items',{fields:{
+      Title:rec.sscc,
+      SKU:rec.sku,
+      ProductName:rec.name,
+      BatchNumber:rec.batch,
+      BestBefore:rec.bbe,
+      CasesOnPallet:rec.cases?parseInt(rec.cases):null,
+      CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
+      TUC:rec.tuc||'',
+      Info:rec.info||'',
+      GeneratedBy:currentAccount?(currentAccount.name||currentAccount.username):'',
+      RecordID:rec.id
+    }});
+  }catch(e){toast('Record not saved: '+e.message,true);}
+}
+
+async function loadHistory(){
+  if(!labelsListId){toast('Not connected',true);return;}
+  document.getElementById('history-body').innerHTML='<div class="empty">Loading…</div>';
+  try{
+    var data=await graph('GET','/sites/'+siteId+'/lists/'+labelsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=500&$select=id,createdDateTime,fields');
+    allRecords=data.value.map(function(item){
+      var f=item.fields;
+      return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime};
+    });
+    updateStats();renderHistory();
+    toast('Loaded '+allRecords.length+' records');
+  }catch(e){toast('Load failed: '+e.message,true);document.getElementById('history-body').innerHTML='<div class="empty">Failed to load</div>';}
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+function collectForm(){
+  var sku=document.getElementById('f-sku').value;
+  var p=products[sku]||{};
+  var casesOverride=document.getElementById('f-cases').value;
+  return{
+    sku:sku,
+    name:p.name||sku,
+    batch:document.getElementById('f-batch').value.trim(),
+    bbe:document.getElementById('f-bbe').value,
+    cases:casesOverride||p.casesOnPallet||'',
+    caseWeight:p.caseWeight||'',
+    unitsPerCase:p.unitsPerCase||'',
+    tuc:p.tuc||'',
+    info:p.info||''
+  };
+}
+function clearForm(){
+  document.getElementById('f-sku').value='';
+  document.getElementById('f-batch').value='';
+  document.getElementById('f-bbe').value='';
+  document.getElementById('f-cases').value='';
+  document.getElementById('product-preview').textContent='Product details will appear here once you select a SKU.';
+}
+function validate(d){
+  if(!d.sku){alert('Please select a SKU');return false;}
+  if(!d.batch){alert('Batch number is required');return false;}
+  if(!d.bbe){alert('Best before date is required');return false;}
+  return true;
+}
+async function makeRecord(data){
+  return{id:Date.now()+'-'+Math.random().toString(36).substr(2,5),sscc:await nextSSCC(),...data,ts:new Date().toISOString()};
+}
+function setBusy(on){['btn-gp','btn-aq'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=on;});}
+
+async function generateAndPrint(){
+  var d=collectForm();if(!validate(d))return;
+  setBusy(true);
+  var rec=await makeRecord(d);
+  await saveRecord(rec);
+  clearForm();
+  doPrint([rec]);
+  setBusy(false);
+  toast('Label generated & printing');
+}
+
+async function addToQueue(){
+  var d=collectForm();if(!validate(d))return;
+  setBusy(true);
+  var rec=await makeRecord(d);
+  await saveRecord(rec);
+  queue.push(rec);
+  clearForm();
+  renderQueueUI();
+  setBusy(false);
+  toast('Added to queue');
+}
+
+function renderQueueUI(){
+  var card=document.getElementById('queue-card');
+  document.getElementById('queue-count').textContent=queue.length;
+  if(!queue.length){card.style.display='none';return;}
+  card.style.display='';
+  var html='<table class="tbl"><thead><tr><th>SSCC</th><th>SKU</th><th>Batch</th><th>BBE</th><th>Cases</th><th></th></tr></thead><tbody>';
+  queue.forEach(function(r,i){
+    html+='<tr><td class="mono">'+fmtSSCC(r.sscc)+'</td><td>'+r.sku+'</td><td>'+r.batch+'</td><td>'+fmtBBE(r.bbe)+'</td><td>'+(r.cases||'—')+'</td><td><button class="btn sm danger" onclick="removeQ('+i+')">✕</button></td></tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('queue-body').innerHTML=html;
+}
+function removeQ(i){queue.splice(i,1);renderQueueUI();}
+function clearQueue(){queue=[];renderQueueUI();}
+function printQueue(){if(!queue.length){alert('Queue is empty');return;}doPrint(queue);toast('Printing '+queue.length+' labels');queue=[];renderQueueUI();}
+
+// ── History UI ────────────────────────────────────────────────────────────────
+function renderHistory(){
+  var body=document.getElementById('history-body');if(!body)return;
+  var q=(document.getElementById('search')||{}).value||'';
+  var fd=(document.getElementById('filter-date')||{}).value||'';
+  var now=new Date();
+  var filtered=allRecords.filter(function(r){
+    if(q&&!r.sku.toLowerCase().includes(q.toLowerCase())&&!r.name.toLowerCase().includes(q.toLowerCase())&&!(r.batch||'').toLowerCase().includes(q.toLowerCase()))return false;
+    if(fd){var d=new Date(r.ts);
+      if(fd==='today'&&d.toDateString()!==now.toDateString())return false;
+      if(fd==='week'){var w=new Date(now);w.setDate(now.getDate()-7);if(d<w)return false;}
+      if(fd==='month'){var m=new Date(now);m.setMonth(now.getMonth()-1);if(d<m)return false;}
+    }
+    return true;
+  });
+  if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
+  var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Cases</th><th>User</th><th></th></tr></thead><tbody>';
+  filtered.forEach(function(r){
+    html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
+    html+='<td>'+fmtDate(r.ts)+'</td><td class="mono">'+fmtSSCC(r.sscc)+'</td><td><strong>'+r.sku+'</strong></td><td>'+r.name+'</td><td>'+(r.batch||'—')+'</td><td>'+fmtBBE(r.bbe)+'</td><td>'+(r.cases||'—')+'</td><td style="color:#aaa">'+(r.generatedBy||'')+'</td>';
+    html+='<td><button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button></td></tr>';
+  });
+  body.innerHTML=html+'</tbody></table>';
+}
+function toggleAll(cb){document.querySelectorAll('#history-body tbody input[type=checkbox]').forEach(function(el){el.checked=cb.checked;});allRecords.forEach(function(r){if(cb.checked)selectedIds.add(r.id);else selectedIds.delete(r.id);});}
+function toggleSel(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);}
+function reprintById(id){var r=allRecords.find(function(x){return x.id===id;});if(r)doPrint([r]);}
+function reprintSelected(){var recs=allRecords.filter(function(r){return selectedIds.has(r.id);});if(!recs.length){alert('Select records to reprint');return;}doPrint(recs);toast('Reprinting '+recs.length+' label(s)');}
+function updateStats(){var today=new Date().toDateString();document.getElementById('stat-total').textContent=allRecords.length;document.getElementById('stat-today').textContent=allRecords.filter(function(r){return new Date(r.ts).toDateString()===today;}).length;document.getElementById('stat-serial').textContent=serialRef-1;}
+function exportCSV(){
+  if(!allRecords.length){alert('Load history first');return;}
+  var rows=['date,sscc,sku,product,batch,bbe,cases,user'];
+  allRecords.forEach(function(r){rows.push([fmtDate(r.ts),r.sscc,r.sku,'"'+r.name+'"',r.batch||'',r.bbe||'',r.cases||'',r.generatedBy||''].join(','));});
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));a.download='pallet_labels_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported');
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function fmtBBE(bbe){
+  // bbe is YYYY-MM from month input
+  if(!bbe)return'—';
+  var p=bbe.split('-');
+  if(p.length<2)return bbe;
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(p[1])-1]+' '+p[0];
+}
+function fmtDate(iso){return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function showPage(p){
+  ['generate','history','settings'].forEach(function(n){document.getElementById('page-'+n).style.display=n===p?'':'none';});
+  document.querySelectorAll('.nav button').forEach(function(b,i){b.classList.toggle('active',['generate','history','settings'][i]===p);});
+  if(p==='history')loadHistory();
+  if(p==='settings')updateSettingsForm();
+}
+function updateSettingsForm(){document.getElementById('s-prefix').value=cfg.prefix;document.getElementById('s-ext').value=cfg.ext;}
+function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},isErr?5000:2500);}
+
+// ── Barcode (Code 128C) ───────────────────────────────────────────────────────
+var C128=[[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],[2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1],[2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1],[2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1],[4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4],[2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1]];
+var STOP=[2,3,3,1,1,1,2];
+
+function makeBarSVG(sscc,scale,height){
+  scale=scale||2;height=height||55;
+  var digits=sscc.replace(/\D/g,'');
+  var vals=[105];var chk=105;var pos=1;
+  for(var i=0;i<digits.length;i+=2){var v=parseInt(digits.substring(i,i+2));vals.push(v);chk+=v*pos;pos++;}
+  chk=chk%103;vals.push(chk);
+  var bars=[];
+  vals.forEach(function(v){C128[v].forEach(function(b){bars.push(b);});});
+  STOP.forEach(function(b){bars.push(b);});
+  var q=6,tw=bars.reduce(function(a,b){return a+b;},0)*scale+q*2;
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+tw+'" height="'+(height+q*2)+'" viewBox="0 0 '+tw+' '+(height+q*2)+'" style="display:block;margin:0 auto"><rect width="'+tw+'" height="'+(height+q*2)+'" fill="white"/>';
+  var x=q;bars.forEach(function(b,i){if(i%2===0)svg+='<rect x="'+x+'" y="'+q+'" width="'+(b*scale)+'" height="'+height+'" fill="black"/>';x+=b*scale;});
+  return svg+'</svg>';
+}
+
+// Make barcode for TUC (encode as string using Code 128B for non-paired digits)
+function makeTUCBarSVG(tuc){
+  // Use same Code128C approach but encode TUC as numeric pairs
+  return makeBarSVG(tuc,1.5,40);
+}
+
+// ── Print ─────────────────────────────────────────────────────────────────────
+function doPrint(recs){
+  var area=document.getElementById('print-area');
+  area.innerHTML='';
+
+  recs.forEach(function(r){
+    var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'—';
+    var casesDisp=r.cases||'—';
+    var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'—';
+    var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
+    var ssccFmt=fmtSSCC(r.sscc);
+
+    var div=document.createElement('div');
+    div.className='lpage';
+    div.innerHTML=
+      '<div class="l-header">'+
+        '<div class="l-title">SAUCE SHOP PALLET LABEL</div>'+
+        '<div class="l-addr">UNIT 2/3 CENTURION WAY, NOTTINGHAM, NG2 1RW</div>'+
+      '</div>'+
+
+      '<div class="l-row cols2">'+
+        '<div class="l-cell"><div class="lbl">Name</div><div class="val">'+r.name+'</div></div>'+
+        '<div class="l-cell"><div class="lbl">SKU</div><div class="val">'+r.sku+'</div></div>'+
+      '</div>'+
+
+      '<div class="l-row cols4">'+
+        '<div class="l-cell"><div class="lbl">Units per Case</div><div class="val">'+(r.unitsPerCase||'—')+' Case</div></div>'+
+        '<div class="l-cell"><div class="lbl">Cases on Pallet</div><div class="val">'+casesDisp+'</div></div>'+
+        '<div class="l-cell"><div class="lbl">Case Weight</div><div class="val">'+caseWeightDisp+'</div></div>'+
+        '<div class="l-cell"><div class="lbl">Total Weight</div><div class="val">'+totalWeight+'</div></div>'+
+      '</div>'+
+
+      '<div class="l-row">'+
+        '<div class="l-cell"><div class="lbl">Information</div><div class="val" style="font-size:9pt;font-weight:normal">'+r.info+'</div></div>'+
+      '</div>'+
+
+      '<div class="l-row cols2">'+
+        '<div class="l-cell"><div class="lbl">Batch</div><div class="val">'+r.batch+'</div></div>'+
+        '<div class="l-cell"><div class="lbl">TUC</div><div class="val">'+r.tuc+'</div></div>'+
+      '</div>'+
+
+      (r.tuc?'<div class="l-barcode-top">'+makeTUCBarSVG(r.tuc)+'</div>':'')+
+
+      '<div class="l-sku-bbe">'+
+        '<div><div class="lbl" style="font-size:9pt;font-weight:bold">SKU:</div><div class="val big">'+r.sku+'</div></div>'+
+        '<div><div class="lbl" style="font-size:9pt;font-weight:bold">BBE:</div><div class="val big">'+fmtBBE(r.bbe)+'</div></div>'+
+      '</div>'+
+
+      '<div class="l-barcode-bot">'+
+        makeBarSVG(r.sscc,2,60)+
+        '<div class="l-sscc-text">'+ssccFull+'</div>'+
+      '</div>';
+
+    area.appendChild(div);
+  });
+
+  // Use a new window for printing to avoid GitHub Pages restrictions
+  var win=window.open('','_blank','width=700,height=900');
+  win.document.write('<html><head><title>Sauce Shop Pallet Label</title><style>');
+  win.document.write(document.querySelector('style').textContent);
+  // Force print styles to apply
+  win.document.write('body>*:not(#print-area){display:none!important}#print-area{display:block!important}');
+  win.document.write('.lpage{width:148mm;min-height:210mm;border:1px solid #000;font-family:Arial,Helvetica,sans-serif;margin:0 auto;background:#fff;page-break-after:always;display:flex;flex-direction:column}');
+  win.document.write('.lpage:last-child{page-break-after:avoid}');
+  win.document.write('.l-header{background:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;text-align:center;padding:4mm 5mm 3mm}');
+  win.document.write('.l-title{font-size:14pt;font-weight:bold;letter-spacing:.05em}');
+  win.document.write('.l-addr{font-size:8pt;margin-top:1mm}');
+  win.document.write('.l-row{border-bottom:1px solid #000;padding:3mm 5mm;display:grid;font-size:9pt}');
+  win.document.write('.l-row.cols2{grid-template-columns:1fr 1fr;gap:6mm}');
+  win.document.write('.l-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;gap:3mm}');
+  win.document.write('.l-cell .lbl{font-size:7pt;color:#555;margin-bottom:1mm}');
+  win.document.write('.l-cell .val{font-size:10pt;font-weight:bold;color:#000}');
+  win.document.write('.l-cell .val.big{font-size:28pt;font-weight:900}');
+  win.document.write('.l-barcode-top{border-bottom:1px solid #000;padding:2mm 5mm;text-align:center}');
+  win.document.write('.l-barcode-bot{padding:3mm 5mm;text-align:center;margin-top:auto}');
+  win.document.write('.l-sscc-text{font-size:9pt;font-family:"Courier New",monospace;letter-spacing:.1em;font-weight:bold;margin-top:1mm}');
+  win.document.write('.l-sku-bbe{border-bottom:1px solid #000;padding:4mm 5mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm;align-items:center}');
+  win.document.write('.lbl{font-size:7pt;color:#555;margin-bottom:1mm}.val{font-size:10pt;font-weight:bold;color:#000}.val.big{font-size:28pt;font-weight:900}');
+  win.document.write('</style></head><body>');
+  win.document.write(area.innerHTML);
+  win.document.write('</body></html>');
+  win.document.close();
+  win.onload=function(){
+    setTimeout(function(){win.print();win.close();},300);
+  };
+}
+</script>
+</body>
+</html>
