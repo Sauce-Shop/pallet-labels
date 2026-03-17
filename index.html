@@ -126,7 +126,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v1.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v1.5</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -821,14 +821,22 @@ var C128_STOP=[2,3,3,1,1,1,2];
 
 function getBarcodeData(sscc){
   var digits=sscc.replace(/\D/g,'');
+  // Code 128C requires even number of digits — pad with leading zero if needed
+  if(digits.length % 2 !== 0) digits = '0' + digits;
   var vals=[105]; var chk=105; var pos=1;
   for(var i=0;i<digits.length;i+=2){
     var v=parseInt(digits.substring(i,i+2));
+    if(v < 0 || v > 102 || !C128_PATTERNS[v]){
+      console.error('Invalid Code128C value:', v, 'at position', i, 'digits:', digits);
+      continue;
+    }
     vals.push(v); chk+=v*pos; pos++;
   }
   chk=chk%103; vals.push(chk);
   var bars=[];
-  vals.forEach(function(v){C128_PATTERNS[v].forEach(function(b){bars.push(b);});});
+  vals.forEach(function(v){
+    if(C128_PATTERNS[v]) C128_PATTERNS[v].forEach(function(b){bars.push(b);});
+  });
   C128_STOP.forEach(function(b){bars.push(b);});
   return bars;
 }
