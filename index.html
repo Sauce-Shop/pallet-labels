@@ -749,35 +749,50 @@ function doPrint(recs){
     area.appendChild(div);
   });
 
-  // Use a new window for printing to avoid GitHub Pages restrictions
-  var win=window.open('','_blank','width=700,height=900');
-  win.document.write('<html><head><title>Sauce Shop Pallet Label</title><style>');
-  win.document.write(document.querySelector('style').textContent);
-  // Force print styles to apply
-  win.document.write('body>*:not(#print-area){display:none!important}#print-area{display:block!important}');
-  win.document.write('.lpage{width:148mm;min-height:210mm;border:1px solid #000;font-family:Arial,Helvetica,sans-serif;margin:0 auto;background:#fff;page-break-after:always;display:flex;flex-direction:column}');
-  win.document.write('.lpage:last-child{page-break-after:avoid}');
-  win.document.write('.l-header{background:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;text-align:center;padding:4mm 5mm 3mm}');
-  win.document.write('.l-title{font-size:14pt;font-weight:bold;letter-spacing:.05em}');
-  win.document.write('.l-addr{font-size:8pt;margin-top:1mm}');
-  win.document.write('.l-row{border-bottom:1px solid #000;padding:3mm 5mm;display:grid;font-size:9pt}');
-  win.document.write('.l-row.cols2{grid-template-columns:1fr 1fr;gap:6mm}');
-  win.document.write('.l-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;gap:3mm}');
-  win.document.write('.l-cell .lbl{font-size:7pt;color:#555;margin-bottom:1mm}');
-  win.document.write('.l-cell .val{font-size:10pt;font-weight:bold;color:#000}');
-  win.document.write('.l-cell .val.big{font-size:28pt;font-weight:900}');
-  win.document.write('.l-barcode-top{border-bottom:1px solid #000;padding:2mm 5mm;text-align:center}');
-  win.document.write('.l-barcode-bot{padding:3mm 5mm;text-align:center;margin-top:auto}');
-  win.document.write('.l-sscc-text{font-size:9pt;font-family:"Courier New",monospace;letter-spacing:.1em;font-weight:bold;margin-top:1mm}');
-  win.document.write('.l-sku-bbe{border-bottom:1px solid #000;padding:4mm 5mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm;align-items:center}');
-  win.document.write('.lbl{font-size:7pt;color:#555;margin-bottom:1mm}.val{font-size:10pt;font-weight:bold;color:#000}.val.big{font-size:28pt;font-weight:900}');
-  win.document.write('</style></head><body>');
-  win.document.write(area.innerHTML);
-  win.document.write('</body></html>');
-  win.document.close();
-  win.onload=function(){
-    setTimeout(function(){win.print();win.close();},300);
-  };
+  // Print via hidden iframe — avoids popup blocker on GitHub Pages
+  var existing=document.getElementById('print-iframe');
+  if(existing)existing.parentNode.removeChild(existing);
+
+  var iframe=document.createElement('iframe');
+  iframe.id='print-iframe';
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden';
+  document.body.appendChild(iframe);
+
+  var labelCSS=
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{background:#fff;font-family:Arial,Helvetica,sans-serif}'+
+    '.lpage{width:148mm;min-height:210mm;border:1px solid #000;margin:0 auto;background:#fff;page-break-after:always;display:flex;flex-direction:column}'+
+    '.lpage:last-child{page-break-after:avoid}'+
+    '.l-header{background:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important;text-align:center;padding:4mm 5mm 3mm}'+
+    '.l-title{font-size:14pt;font-weight:bold;letter-spacing:.05em}'+
+    '.l-addr{font-size:8pt;margin-top:1mm}'+
+    '.l-row{border-bottom:1px solid #000;padding:3mm 5mm;display:grid;font-size:9pt}'+
+    '.l-row.cols2{grid-template-columns:1fr 1fr;gap:6mm}'+
+    '.l-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;gap:3mm}'+
+    '.l-cell .lbl{font-size:7pt;color:#555;margin-bottom:1mm}'+
+    '.l-cell .val{font-size:10pt;font-weight:bold;color:#000}'+
+    '.l-cell .val.big{font-size:28pt;font-weight:900}'+
+    '.l-barcode-top{border-bottom:1px solid #000;padding:2mm 5mm;text-align:center}'+
+    '.l-barcode-bot{padding:3mm 5mm;text-align:center;margin-top:auto}'+
+    '.l-sscc-text{font-size:9pt;font-family:"Courier New",monospace;letter-spacing:.1em;font-weight:bold;margin-top:1mm}'+
+    '.l-sku-bbe{border-bottom:1px solid #000;padding:4mm 5mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm;align-items:center}'+
+    '.lbl{font-size:7pt;color:#555;margin-bottom:1mm}'+
+    '.val{font-size:10pt;font-weight:bold;color:#000}'+
+    '.val.big{font-size:28pt;font-weight:900}';
+
+  var doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sauce Shop Pallet Label</title><style>'+labelCSS+'</style></head><body>'+area.innerHTML+'</body></html>');
+  doc.close();
+
+  setTimeout(function(){
+    try{
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }catch(e){
+      toast('Print error: '+e.message,true);
+    }
+  },600);
 }
 </script>
 </body>
