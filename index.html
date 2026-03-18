@@ -126,7 +126,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v1.7</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v1.8</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -527,7 +527,7 @@ async function saveRecord(rec){
       CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
       TUC:rec.tuc||'',
       Info:rec.info||'',
-      GeneratedBy:currentAccount?(currentAccount.name||currentAccount.username):'',
+      GeneratedBy:rec.generatedBy||'',
       RecordID:rec.id
     }});
   }catch(e){toast('Record not saved: '+e.message,true);}
@@ -581,7 +581,13 @@ function validate(d){
   return true;
 }
 async function makeRecord(data){
-  return{id:Date.now()+'-'+Math.random().toString(36).substr(2,5),sscc:await nextSSCC(),...data,ts:new Date().toISOString()};
+  var generatedBy = currentAccount ? (currentAccount.name || currentAccount.username || '') : '';
+  return Object.assign({
+    id:Date.now()+'-'+Math.random().toString(36).substr(2,5),
+    sscc:await nextSSCC(),
+    ts:new Date().toISOString(),
+    generatedBy:generatedBy
+  }, data);
 }
 function setBusy(on){['btn-gp','btn-aq'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=on;});}
 
@@ -654,6 +660,8 @@ function renderHistory(){
     }
     return true;
   });
+  // Sort by timestamp descending (newest first)
+  filtered.sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
   var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Cases</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
@@ -816,12 +824,17 @@ function doPrint(recs){
     // Footer
     divider(y);
     doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
-    var footerText='Generated: '+fmtDate(r.ts)+'   By: '+(r.generatedBy||'');
+    var generatedByText = r.generatedBy || (currentAccount?(currentAccount.name||currentAccount.username):'');
+    var footerText='Generated: '+fmtDate(r.ts)+'   By: '+generatedByText;
     doc.text(footerText, W/2, y+4, {align:'center', maxWidth: W-8});
   });
 
   // Save
-  var filename = 'pallet-label-'+(recs.length===1?recs[0].sku+'-'+recs[0].batch:'batch-'+recs.length)+'.pdf';
+  var now = new Date();
+  var dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var timeStr = String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var skuStr = recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
+  var filename = 'pallet-label-'+dateStr+'-'+timeStr+'-'+skuStr+(recs.length>1?'-x'+recs.length:'')+'.pdf';
   doc.save(filename);
   toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
 
