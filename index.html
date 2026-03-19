@@ -114,9 +114,10 @@ const CONFIG = {
   clientId:  "5e0f988d-48b0-4fa0-b6ff-8f962641dfe1",
   tenantId:  "05a4eeee-7b33-4587-8a42-9ae3006b8b9e",
   siteUrl:   "https://sauceshop.sharepoint.com/sites/Operations",
-  labelsListName:   "PalletLabels",
-  counterListName:  "PalletCounter",
-  productsListName: "PalletProducts",
+  labelsListName:       "PalletLabels",
+  counterListName:      "PalletCounter",
+  productsListName:     "PalletProducts",
+  verificationsListName:"TUCVerifications",
 };
 </script>
 
@@ -126,7 +127,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v1.9</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.0</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -217,7 +218,7 @@ const CONFIG = {
       <div id="v-product-info" style="display:none;margin-bottom:16px">
         <div class="product-preview" id="v-product-preview"></div>
         <div style="margin-top:10px;font-size:13px;color:#555">
-          Expected TUC: <strong id="v-expected-tuc" style="font-family:'Courier New',monospace;font-size:14px"></strong>
+          Expected TUC: <strong id="v-expected-tuc" style="font-family:monospace;font-size:14px"></strong>
         </div>
       </div>
 
@@ -227,7 +228,7 @@ const CONFIG = {
           type="text"
           placeholder="Waiting for scan…"
           autocomplete="off"
-          style="font-family:'Courier New',monospace;font-size:16px;height:48px;letter-spacing:.05em"
+          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em"
           oninput="onScanInput()"
           onkeydown="onScanKeydown(event)">
         <div style="font-size:12px;color:#aaa;margin-top:6px">The scanner submits automatically — you don't need to press Enter.</div>
@@ -931,7 +932,7 @@ function onVerifySKUChange(){
   document.getElementById('v-product-preview').innerHTML =
     '<strong>'+p.name+'</strong><br>'+
     'SKU: <strong>'+sku+'</strong> &nbsp;·&nbsp; '+
-    'TUC: <strong style="font-family:'Courier New',monospace">'+p.tuc+'</strong>';
+    'TUC: <strong class="mono">'+p.tuc+'</strong>';
   document.getElementById('v-expected-tuc').textContent = p.tuc || 'Not set';
   infoEl.style.display = '';
   scanEl.style.display = '';
@@ -982,8 +983,8 @@ function showVerifyResult(pass, sku, p, scanned, expected){
   document.getElementById('v-result-title').textContent = pass ? 'CORRECT — TUC Match' : 'INCORRECT — TUC Mismatch';
   document.getElementById('v-result-title').style.color = pass ? '#155724' : '#721c24';
 
-  var detail = p.name + ' (' + sku + ')<br>Scanned: <strong style="font-family:'Courier New',monospace">' + scanned + '</strong>';
-  if(!pass) detail += '<br>Expected: <strong style="font-family:'Courier New',monospace">' + expected + '</strong>';
+  var detail = p.name + ' (' + sku + ')<br>Scanned: <strong class="mono">' + scanned + '</strong>';
+  if(!pass) detail += '<br>Expected: <strong class="mono">' + expected + '</strong>';
   document.getElementById('v-result-detail').innerHTML = detail;
   document.getElementById('v-result-detail').style.color = pass ? '#155724' : '#721c24';
 
