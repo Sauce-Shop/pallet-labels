@@ -127,7 +127,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.0</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.1</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -583,7 +583,10 @@ async function saveRecord(rec){
       TUC:rec.tuc||'',
       Info:rec.info||'',
       GeneratedBy:rec.generatedBy||'',
-      RecordID:rec.id
+      RecordID:rec.id,
+      PalletNumber:rec.palletNumber||1,
+      BatchTotal:rec.batchTotal||1,
+      Status:rec.status||'Produced'
     }});
   }catch(e){toast('Record not saved: '+e.message,true);}
 }
@@ -595,7 +598,7 @@ async function loadHistory(){
     var data=await graph('GET','/sites/'+siteId+'/lists/'+labelsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=500&$select=id,createdDateTime,fields');
     allRecords=data.value.map(function(item){
       var f=item.fields;
-      return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime};
+      return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime,palletNumber:f.PalletNumber||1,batchTotal:f.BatchTotal||1,status:f.Status||'Produced'};
     });
     updateStats();renderHistory();
     toast('Loaded '+allRecords.length+' records');
@@ -655,6 +658,9 @@ async function generateAndPrint(){
     var recs=[];
     for(var i=0;i<numPallets;i++){
       var rec=await makeRecord(d);
+      rec.palletNumber = i+1;
+      rec.batchTotal = numPallets;
+      rec.status = 'Produced';
       await saveRecord(rec);
       recs.push(rec);
     }
@@ -675,6 +681,9 @@ async function addToQueue(){
   setBusy(true);
   for(var i=0;i<numPallets;i++){
     var rec=await makeRecord(d);
+    rec.palletNumber = i+1;
+    rec.batchTotal = numPallets;
+    rec.status = 'Produced';
     await saveRecord(rec);
     queue.push(rec);
   }
@@ -718,11 +727,19 @@ function renderHistory(){
   // Sort by timestamp descending (newest first)
   filtered.sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
-  var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Cases</th><th>User</th><th></th></tr></thead><tbody>';
+  var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Pallet #</th><th>Cases</th><th>Status</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
     html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
-    html+='<td>'+fmtDate(r.ts)+'</td><td class="mono">'+fmtSSCC(r.sscc)+'</td><td><strong>'+r.sku+'</strong></td><td>'+r.name+'</td><td>'+(r.batch||'—')+'</td><td>'+fmtBBE(r.bbe)+'</td><td>'+(r.cases||'—')+'</td><td style="color:#aaa">'+(r.generatedBy||'')+'</td>';
-    html+='<td><button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button></td></tr>';
+    var palletDisp = r.palletNumber && r.batchTotal ? r.palletNumber+' / '+r.batchTotal : (r.palletNumber||'—');
+    var isDNP = r.status === 'Did Not Produce';
+    var statusBadge = isDNP
+      ? '<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
+      : '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
+    var rowStyle = isDNP ? ' style="opacity:.6;text-decoration:line-through"' : '';
+    html+='<td'+rowStyle+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rowStyle+'>'+fmtSSCC(r.sscc)+'</td><td'+rowStyle+'><strong>'+r.sku+'</strong></td><td'+rowStyle+'>'+r.name+'</td><td'+rowStyle+'>'+(r.batch||'—')+'</td><td'+rowStyle+'>'+fmtBBE(r.bbe)+'</td><td'+rowStyle+'>'+palletDisp+'</td><td'+rowStyle+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rowStyle+'>'+(r.generatedBy||'')+'</td>';
+    var btns = '<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
+    if(!isDNP) btns += ' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
+    html+='<td style="white-space:nowrap">'+btns+'</td></tr>';
   });
   body.innerHTML=html+'</tbody></table>';
 }
@@ -730,6 +747,22 @@ function toggleAll(cb){document.querySelectorAll('#history-body tbody input[type
 function toggleSel(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);}
 function reprintById(id){var r=allRecords.find(function(x){return x.id===id;});if(r)doPrint([r]);}
 function reprintSelected(){var recs=allRecords.filter(function(r){return selectedIds.has(r.id);});if(!recs.length){alert('Select records to reprint');return;}doPrint(recs);toast('Reprinting '+recs.length+' label(s)');}
+async function markDNP(id, spId){
+  if(!confirm('Mark this pallet as "Did Not Produce"? This cannot be undone.')) return;
+  // Update local record
+  var rec = allRecords.find(function(r){ return r.id===id; });
+  if(rec) rec.status = 'Did Not Produce';
+  renderHistory();
+  // Update SharePoint
+  if(!spId || !labelsListId){ toast('Could not update SharePoint — spId missing', true); return; }
+  try{
+    await graph('PATCH', '/sites/'+siteId+'/lists/'+labelsListId+'/items/'+spId+'/fields', { Status: 'Did Not Produce' });
+    toast('Marked as Did Not Produce');
+  }catch(e){
+    toast('SharePoint update failed: '+e.message, true);
+  }
+}
+
 function updateStats(){var today=new Date().toDateString();document.getElementById('stat-total').textContent=allRecords.length;document.getElementById('stat-today').textContent=allRecords.filter(function(r){return new Date(r.ts).toDateString()===today;}).length;document.getElementById('stat-serial').textContent=serialRef-1;}
 function exportCSV(){
   if(!allRecords.length){alert('Load history first');return;}
@@ -809,12 +842,17 @@ function doPrint(recs){
     function label(txt, x, yy){ doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.text(txt.toUpperCase(), x, yy); }
     function value(txt, x, yy, size){ doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(size||9); doc.text(String(txt||'-'), x, yy); }
 
-    // Row: Name + SKU
+    // Row: Name + SKU + Pallet number
     divider(y);
     label('Name', 4, y+5);
     value(r.name, 4, y+10);
     label('SKU', W/2+2, y+5);
     value(r.sku, W/2+2, y+10);
+    var palletLabel = r.palletNumber && r.batchTotal ? 'Pallet '+r.palletNumber+' of '+r.batchTotal : '';
+    if(palletLabel){
+      label('Pallet', W*3/4+2, y+5);
+      value(palletLabel, W*3/4+2, y+10, 8);
+    }
     y += 15;
 
     // Row: Units/case, Cases on pallet, Case weight, Total weight
