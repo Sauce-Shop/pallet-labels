@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f4;color:#1c1c1a;font-size:15px}
-.app{max-width:900px;margin:0 auto;padding:1.25rem}
+.app{max-width:1200px;margin:0 auto;padding:1.25rem}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
 .user-bar{display:flex;align-items:center;gap:10px;font-size:13px;color:#555}
 .user-bar button{height:30px;padding:0 14px;font-size:12px;border:1px solid #d0d0ce;border-radius:6px;background:#fff;cursor:pointer}
@@ -33,9 +33,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .product-preview strong{color:#1c1c1a}
 .sscc-box{font-family:'Courier New',monospace;font-size:16px;font-weight:700;letter-spacing:.08em;padding:10px 14px;background:#f5f5f4;border-radius:8px;border:1px solid #e0e0dd;display:inline-block}
 .tbl-wrap{overflow-x:auto}
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;padding:8px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-.tbl td{padding:9px 10px;border-bottom:1px solid #f0f0ee;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:6px 8px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.tbl td{padding:7px 8px;border-bottom:1px solid #f0f0ee;white-space:nowrap}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:#fafaf9}
 .mono{font-family:'Courier New',monospace;font-size:11px}
@@ -127,7 +127,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.1</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.3</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -206,50 +206,85 @@ const CONFIG = {
   <div id="page-verify" style="display:none">
 
     <div class="card" id="verify-main">
-      <div class="sec-label">TUC barcode verification</div>
+      <div class="sec-label">Label verification</div>
 
-      <div class="field" style="margin-bottom:16px">
-        <label>Select product to verify *</label>
-        <select id="v-sku" onchange="onVerifySKUChange()">
-          <option value="">— select a product —</option>
-        </select>
-      </div>
-
-      <div id="v-product-info" style="display:none;margin-bottom:16px">
-        <div class="product-preview" id="v-product-preview"></div>
-        <div style="margin-top:10px;font-size:13px;color:#555">
-          Expected TUC: <strong id="v-expected-tuc" style="font-family:monospace;font-size:14px"></strong>
+      <!-- Step 1: Product + BBE -->
+      <div id="v-step1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="field">
+            <label>Select product *</label>
+            <select id="v-sku" onchange="onVerifySKUChange()">
+              <option value="">— select a product —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>BBE on label (MM/YYYY) *</label>
+            <input id="v-bbe-typed" type="text" placeholder="e.g. 09/2027" maxlength="7" oninput="onBBEInput(this)">
+          </div>
         </div>
+
+        <div id="v-product-info" style="display:none;margin-bottom:12px">
+          <div class="product-preview" id="v-product-preview"></div>
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px">
+            <div>Expected BBE: <strong id="v-expected-bbe" style="color:#1c1c1a"></strong></div>
+            <div>BBE Check: <strong id="v-bbe-check">—</strong></div>
+            <div>Shelf life: <strong id="v-shelf-life">—</strong></div>
+          </div>
+        </div>
+
+        <button class="btn primary" id="v-start-btn" style="display:none" onclick="startScanning()">Start scanning →</button>
       </div>
 
-      <div id="v-scan-area" style="display:none">
-        <div style="font-size:13px;color:#555;margin-bottom:8px">Scan the barcode on the product now — make sure this field is focused:</div>
-        <input id="v-scan-input"
-          type="text"
-          placeholder="Waiting for scan…"
+      <!-- Step 2: Scan TUC (case label) -->
+      <div id="v-step2" style="display:none">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">
+          Step 1 of 2 — Scan case label (TUC barcode)
+        </div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:8px">
+          Expected: <span class="mono" id="v-tuc-expected-disp"></span>
+        </div>
+        <input id="v-tuc-input" type="text" placeholder="Scan TUC barcode…"
           autocomplete="off"
-          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em"
-          oninput="onScanInput()"
-          onkeydown="onScanKeydown(event)">
-        <div style="font-size:12px;color:#aaa;margin-top:6px">The scanner submits automatically — you don't need to press Enter.</div>
+          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%"
+          oninput="onTUCScanInput()"
+          onkeydown="if(event.key==='Enter')processTUCScan()">
+        <div style="font-size:12px;color:#aaa;margin-top:6px">Scanner submits automatically — no need to press Enter.</div>
+      </div>
+
+      <!-- Step 3: Scan EAN-13 (bottle label) -->
+      <div id="v-step3" style="display:none">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">
+          Step 2 of 2 — Scan bottle label (EAN-13 barcode)
+        </div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:8px">
+          Expected: <span class="mono" id="v-ean-expected-disp"></span>
+        </div>
+        <input id="v-ean-input" type="text" placeholder="Scan EAN-13 barcode…"
+          autocomplete="off"
+          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%"
+          oninput="onEANScanInput()"
+          onkeydown="if(event.key==='Enter')processEANScan()">
+        <div style="font-size:12px;color:#aaa;margin-top:6px">Scanner submits automatically — no need to press Enter.</div>
       </div>
     </div>
 
     <!-- Result flash panel -->
-    <div id="v-result" style="display:none;border-radius:12px;padding:2.5rem;text-align:center;margin-bottom:1rem;transition:background .2s">
-      <div id="v-result-icon" style="font-size:56px;margin-bottom:12px"></div>
-      <div id="v-result-title" style="font-size:22px;font-weight:700;margin-bottom:6px"></div>
-      <div id="v-result-detail" style="font-size:14px;opacity:.85;line-height:1.6"></div>
-      <button class="btn" style="margin-top:1.25rem" onclick="resetVerify()">Scan another</button>
+    <div id="v-result" style="display:none;border-radius:12px;padding:2rem;text-align:center;margin-bottom:1rem;transition:background .2s">
+      <div id="v-result-icon" style="font-size:52px;margin-bottom:10px"></div>
+      <div id="v-result-title" style="font-size:20px;font-weight:700;margin-bottom:8px"></div>
+      <div id="v-result-detail" style="font-size:13px;line-height:1.8;text-align:left;display:inline-block"></div>
+      <div style="margin-top:1.25rem">
+        <button class="btn primary" onclick="resetVerify()">Verify another</button>
+      </div>
     </div>
 
     <!-- Scan log -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
-        <span style="font-weight:600;font-size:14px">Today's scan log <span class="badge" id="v-log-count">0</span></span>
+        <span style="font-weight:600;font-size:14px">Today's verification log <span class="badge" id="v-log-count">0</span></span>
         <button class="btn" onclick="loadVerifications()">Refresh</button>
       </div>
-      <div class="tbl-wrap"><div id="v-log-body"><div class="empty">No scans yet today</div></div></div>
+      <div class="tbl-wrap"><div id="v-log-body"><div class="empty">No verifications today</div></div></div>
     </div>
   </div>
 
@@ -479,7 +514,9 @@ async function loadProducts(){
         caseWeight:f.CaseWeight||'',
         casesOnPallet:f.CasesOnPallet||'',
         tuc:f.TUC||'',
-        info:f.Info||''
+        info:f.Info||'',
+        ean13:f.EAN13||'',
+        shelfLifeMonths:f.ShelfLifeMonths||''
       };
       var opt=document.createElement('option');
       opt.value=sku;
@@ -724,19 +761,24 @@ function renderHistory(){
     }
     return true;
   });
-  // Sort by timestamp descending (newest first)
-  filtered.sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
+  // Sort: newest date first, then by palletNumber ascending within same batch
+  filtered.sort(function(a,b){
+    var dateDiff = new Date(b.ts).setSeconds(0,0) - new Date(a.ts).setSeconds(0,0);
+    if(dateDiff !== 0) return dateDiff;
+    return (a.palletNumber||0) - (b.palletNumber||0);
+  });
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
   var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Pallet #</th><th>Cases</th><th>Status</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
     html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
-    var palletDisp = r.palletNumber && r.batchTotal ? r.palletNumber+' / '+r.batchTotal : (r.palletNumber||'—');
+    var palletDisp = r.palletNumber ? String(r.palletNumber) : '—';
     var isDNP = r.status === 'Did Not Produce';
     var statusBadge = isDNP
       ? '<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
       : '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
     var rowStyle = isDNP ? ' style="opacity:.6;text-decoration:line-through"' : '';
-    html+='<td'+rowStyle+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rowStyle+'>'+fmtSSCC(r.sscc)+'</td><td'+rowStyle+'><strong>'+r.sku+'</strong></td><td'+rowStyle+'>'+r.name+'</td><td'+rowStyle+'>'+(r.batch||'—')+'</td><td'+rowStyle+'>'+fmtBBE(r.bbe)+'</td><td'+rowStyle+'>'+palletDisp+'</td><td'+rowStyle+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rowStyle+'>'+(r.generatedBy||'')+'</td>';
+    var truncName = r.name.length>22 ? r.name.substring(0,22)+'…' : r.name;
+    html+='<td'+rowStyle+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rowStyle+'>'+fmtSSCC(r.sscc)+'</td><td'+rowStyle+'><strong>'+r.sku+'</strong></td><td'+rowStyle+' title="'+r.name+'">'+truncName+'</td><td'+rowStyle+'>'+(r.batch||'—')+'</td><td'+rowStyle+'>'+fmtBBE(r.bbe)+'</td><td'+rowStyle+'>'+palletDisp+'</td><td'+rowStyle+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rowStyle+'>'+(r.generatedBy||'')+'</td>';
     var btns = '<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
     if(!isDNP) btns += ' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
     html+='<td style="white-space:nowrap">'+btns+'</td></tr>';
@@ -848,10 +890,9 @@ function doPrint(recs){
     value(r.name, 4, y+10);
     label('SKU', W/2+2, y+5);
     value(r.sku, W/2+2, y+10);
-    var palletLabel = r.palletNumber && r.batchTotal ? 'Pallet '+r.palletNumber+' of '+r.batchTotal : '';
-    if(palletLabel){
-      label('Pallet', W*3/4+2, y+5);
-      value(palletLabel, W*3/4+2, y+10, 8);
+    if(r.palletNumber){
+      label('Production Number', W*3/4+2, y+5);
+      value(String(r.palletNumber), W*3/4+2, y+10, 9);
     }
     y += 15;
 
@@ -941,6 +982,7 @@ function doPrint(recs){
 
 // ── Verify functions ─────────────────────────────────────────────────────────
 var verifyLogs = [];
+var vState = { sku:'', tucPass:null, eanPass:null, bbePass:null, tucScanned:'', eanScanned:'', bbeTyped:'', expectedBBE:'' };
 
 function populateVerifySKU(){
   var sel = document.getElementById('v-sku');
@@ -955,87 +997,177 @@ function populateVerifySKU(){
   if(current) sel.value = current;
 }
 
+function calcExpectedBBE(shelfLifeMonths){
+  // Add shelfLifeMonths to today, go to end of that month
+  var d = new Date();
+  d.setMonth(d.getMonth() + parseInt(shelfLifeMonths));
+  // End of that month = day 0 of next month
+  var endOfMonth = new Date(d.getFullYear(), d.getMonth()+1, 0);
+  var mm = String(endOfMonth.getMonth()+1).padStart(2,'0');
+  var yyyy = endOfMonth.getFullYear();
+  return mm+'/'+yyyy; // e.g. "09/2027"
+}
+
 function onVerifySKUChange(){
+  updateVerifyInfo();
+}
+
+function onBBEInput(el){
+  // Auto-format: insert / after 2 digits
+  var v = el.value.replace(/\D/g,'');
+  if(v.length > 2) v = v.substring(0,2)+'/'+v.substring(2,6);
+  el.value = v;
+  updateVerifyInfo();
+}
+
+function updateVerifyInfo(){
   var sku = document.getElementById('v-sku').value;
+  var bbeTyped = document.getElementById('v-bbe-typed').value.trim();
   var p = products[sku];
   var infoEl = document.getElementById('v-product-info');
-  var scanEl = document.getElementById('v-scan-area');
-  var resultEl = document.getElementById('v-result');
-  resultEl.style.display = 'none';
-  if(!p || !sku){
-    infoEl.style.display = 'none';
-    scanEl.style.display = 'none';
-    return;
-  }
+  var startBtn = document.getElementById('v-start-btn');
+  document.getElementById('v-result').style.display = 'none';
+
+  if(!p || !sku){ infoEl.style.display='none'; startBtn.style.display='none'; return; }
+
+  var shelfLife = p.shelfLifeMonths || '';
+  var expectedBBE = shelfLife ? calcExpectedBBE(shelfLife) : 'Not set';
+  vState.expectedBBE = expectedBBE;
+
   document.getElementById('v-product-preview').innerHTML =
-    '<strong>'+p.name+'</strong><br>'+
-    'SKU: <strong>'+sku+'</strong> &nbsp;·&nbsp; '+
-    'TUC: <strong class="mono">'+p.tuc+'</strong>';
-  document.getElementById('v-expected-tuc').textContent = p.tuc || 'Not set';
+    '<strong>'+p.name+'</strong> &nbsp;·&nbsp; SKU: <strong>'+sku+'</strong><br>'+
+    'TUC: <strong class="mono">'+(p.tuc||'Not set')+'</strong> &nbsp;·&nbsp; '+
+    'EAN-13: <strong class="mono">'+(p.ean13||'Not set')+'</strong>';
+  document.getElementById('v-expected-bbe').textContent = expectedBBE;
+  document.getElementById('v-shelf-life').textContent = shelfLife ? shelfLife+' months' : 'Not set';
+
+  // BBE check
+  var bbeCheckEl = document.getElementById('v-bbe-check');
+  if(bbeTyped.length === 7){
+    var bbeMatch = bbeTyped === expectedBBE;
+    bbeCheckEl.textContent = bbeMatch ? '✓ Correct' : '✗ Mismatch';
+    bbeCheckEl.style.color = bbeMatch ? '#155724' : '#c0392b';
+    vState.bbePass = bbeMatch;
+    vState.bbeTyped = bbeTyped;
+  } else {
+    bbeCheckEl.textContent = '—';
+    bbeCheckEl.style.color = '#888';
+    vState.bbePass = null;
+  }
+
   infoEl.style.display = '';
-  scanEl.style.display = '';
-  document.getElementById('v-scan-input').value = '';
-  document.getElementById('v-scan-input').focus();
+  // Show start button only when BBE is fully entered
+  startBtn.style.display = (bbeTyped.length === 7) ? '' : 'none';
 }
 
-function onScanKeydown(e){
-  // Scanners typically send Enter after the barcode
-  if(e.key === 'Enter') processVerifyScan();
-}
-
-function onScanInput(){
-  // Some scanners don't send Enter — process when input stops changing
-  var inp = document.getElementById('v-scan-input');
-  clearTimeout(inp._scanTimer);
-  inp._scanTimer = setTimeout(function(){
-    if(inp.value.length > 4) processVerifyScan();
-  }, 300);
-}
-
-function processVerifyScan(){
+function startScanning(){
   var sku = document.getElementById('v-sku').value;
   var p = products[sku];
-  if(!p || !sku){ alert('Please select a product first'); return; }
+  if(!p) return;
+  vState.sku = sku;
+  vState.tucScanned = '';
+  vState.eanScanned = '';
+  vState.tucPass = null;
+  vState.eanPass = null;
 
-  var scanned = document.getElementById('v-scan-input').value.trim().replace(/\D/g,'');
-  var expected = String(p.tuc || '').replace(/\D/g,'');
+  document.getElementById('v-step1').style.display = 'none';
+  document.getElementById('v-step2').style.display = '';
+  document.getElementById('v-step3').style.display = 'none';
+  document.getElementById('v-result').style.display = 'none';
 
-  if(!scanned) return;
+  document.getElementById('v-tuc-expected-disp').textContent = p.tuc || 'Not set';
+  document.getElementById('v-ean-expected-disp').textContent = p.ean13 || 'Not set';
 
-  var pass = scanned === expected;
-  showVerifyResult(pass, sku, p, scanned, expected);
-  saveVerification(sku, p, scanned, expected, pass);
-  document.getElementById('v-scan-input').value = '';
+  document.getElementById('v-tuc-input').value = '';
+  setTimeout(function(){ document.getElementById('v-tuc-input').focus(); }, 100);
 }
 
-function showVerifyResult(pass, sku, p, scanned, expected){
+function onTUCScanInput(){
+  var inp = document.getElementById('v-tuc-input');
+  clearTimeout(inp._t);
+  inp._t = setTimeout(function(){ if(inp.value.length > 4) processTUCScan(); }, 300);
+}
+
+function processTUCScan(){
+  var sku = vState.sku;
+  var p = products[sku];
+  if(!p) return;
+  var scanned = document.getElementById('v-tuc-input').value.trim().replace(/\D/g,'');
+  if(!scanned) return;
+  var expected = String(p.tuc||'').replace(/\D/g,'');
+  vState.tucScanned = scanned;
+  vState.tucPass = (scanned === expected);
+  document.getElementById('v-tuc-input').value = '';
+  // Move to EAN step
+  document.getElementById('v-step2').style.display = 'none';
+  document.getElementById('v-step3').style.display = '';
+  setTimeout(function(){ document.getElementById('v-ean-input').focus(); }, 100);
+}
+
+function onEANScanInput(){
+  var inp = document.getElementById('v-ean-input');
+  clearTimeout(inp._t);
+  inp._t = setTimeout(function(){ if(inp.value.length > 4) processEANScan(); }, 300);
+}
+
+function processEANScan(){
+  var sku = vState.sku;
+  var p = products[sku];
+  if(!p) return;
+  var scanned = document.getElementById('v-ean-input').value.trim().replace(/\D/g,'');
+  if(!scanned) return;
+  var expected = String(p.ean13||'').replace(/\D/g,'');
+  vState.eanScanned = scanned;
+  vState.eanPass = (scanned === expected);
+  document.getElementById('v-ean-input').value = '';
+  // All done — show result
+  showVerifyResult();
+}
+
+function showVerifyResult(){
+  var sku = vState.sku;
+  var p = products[sku];
+  var allPass = vState.bbePass && vState.tucPass && vState.eanPass;
+
+  document.getElementById('v-step2').style.display = 'none';
+  document.getElementById('v-step3').style.display = 'none';
+
   var resultEl = document.getElementById('v-result');
-  var mainEl = document.getElementById('verify-main');
-
   resultEl.style.display = '';
-  resultEl.style.background = pass ? '#d4edda' : '#f8d7da';
-  resultEl.style.border = '2px solid '+(pass ? '#28a745' : '#dc3545');
+  resultEl.style.background = allPass ? '#d4edda' : '#f8d7da';
+  resultEl.style.border = '2px solid '+(allPass ? '#28a745' : '#dc3545');
 
-  document.getElementById('v-result-icon').textContent = pass ? '✓' : '✗';
-  document.getElementById('v-result-icon').style.color = pass ? '#28a745' : '#dc3545';
-  document.getElementById('v-result-title').textContent = pass ? 'CORRECT — TUC Match' : 'INCORRECT — TUC Mismatch';
-  document.getElementById('v-result-title').style.color = pass ? '#155724' : '#721c24';
+  var iconEl = document.getElementById('v-result-icon');
+  iconEl.textContent = allPass ? '✓' : '✗';
+  iconEl.style.color = allPass ? '#28a745' : '#dc3545';
 
-  var detail = p.name + ' (' + sku + ')<br>Scanned: <strong class="mono">' + scanned + '</strong>';
-  if(!pass) detail += '<br>Expected: <strong class="mono">' + expected + '</strong>';
-  document.getElementById('v-result-detail').innerHTML = detail;
-  document.getElementById('v-result-detail').style.color = pass ? '#155724' : '#721c24';
+  var titleEl = document.getElementById('v-result-title');
+  titleEl.textContent = allPass ? 'ALL CHECKS PASSED' : 'VERIFICATION FAILED';
+  titleEl.style.color = allPass ? '#155724' : '#721c24';
 
-  // Auto-hide after 4 seconds on pass, stay on fail
-  if(pass){
-    clearTimeout(resultEl._hideTimer);
-    resultEl._hideTimer = setTimeout(function(){
-      resetVerify();
-    }, 4000);
+  function checkRow(label, pass, scanned, expected){
+    var icon = pass ? '✓' : '✗';
+    var col = pass ? '#155724' : '#c0392b';
+    var row = '<div style="color:'+col+'"><strong>'+icon+' '+label+'</strong>';
+    if(!pass) row += ' — Scanned: <span class="mono">'+scanned+'</span> | Expected: <span class="mono">'+expected+'</span>';
+    row += '</div>';
+    return row;
   }
 
-  // Play a sound
-  playBeep(pass);
+  var detail = checkRow('BBE', vState.bbePass, vState.bbeTyped, vState.expectedBBE);
+  detail += checkRow('Case label (TUC)', vState.tucPass, vState.tucScanned, String(p.tuc||'').replace(/\D/g,''));
+  detail += checkRow('Bottle label (EAN-13)', vState.eanPass, vState.eanScanned, String(p.ean13||'').replace(/\D/g,''));
+
+  document.getElementById('v-result-detail').innerHTML = detail;
+  playBeep(allPass);
+
+  // Save to SharePoint
+  saveVerification(sku, p, allPass);
+
+  if(allPass){
+    clearTimeout(resultEl._t);
+    resultEl._t = setTimeout(function(){ resetVerify(); }, 5000);
+  }
 }
 
 function playBeep(pass){
@@ -1048,30 +1180,38 @@ function playBeep(pass){
     osc.frequency.value = pass ? 880 : 220;
     osc.type = pass ? 'sine' : 'sawtooth';
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (pass ? 0.4 : 0.6));
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+(pass?0.4:0.6));
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + (pass ? 0.4 : 0.6));
+    osc.stop(ctx.currentTime+(pass?0.4:0.6));
   }catch(e){}
 }
 
 function resetVerify(){
+  vState = { sku:'', tucPass:null, eanPass:null, bbePass:null, tucScanned:'', eanScanned:'', bbeTyped:'', expectedBBE:'' };
   document.getElementById('v-result').style.display = 'none';
-  document.getElementById('v-scan-input').value = '';
-  document.getElementById('v-scan-input').focus();
+  document.getElementById('v-step1').style.display = '';
+  document.getElementById('v-step2').style.display = 'none';
+  document.getElementById('v-step3').style.display = 'none';
+  document.getElementById('v-bbe-typed').value = '';
+  document.getElementById('v-bbe-check').textContent = '—';
+  document.getElementById('v-bbe-check').style.color = '#888';
+  document.getElementById('v-start-btn').style.display = 'none';
+  document.getElementById('v-product-info').style.display = 'none';
+  document.getElementById('v-sku').value = '';
 }
 
-async function saveVerification(sku, p, scanned, expected, pass){
+async function saveVerification(sku, p, allPass){
   if(!verificationsListId) return;
   var id = Date.now()+'-'+Math.random().toString(36).substr(2,5);
   var rec = {
-    id: id,
-    sku: sku,
-    name: p.name,
-    scanned: scanned,
-    expected: expected,
-    pass: pass,
-    by: currentAccount?(currentAccount.name||currentAccount.username):'',
-    ts: new Date().toISOString()
+    id:id, sku:sku, name:p.name,
+    tucScanned:vState.tucScanned, tucExpected:String(p.tuc||''),
+    eanScanned:vState.eanScanned, eanExpected:String(p.ean13||''),
+    bbeTyped:vState.bbeTyped, bbeExpected:vState.expectedBBE,
+    tucPass:vState.tucPass, eanPass:vState.eanPass, bbePass:vState.bbePass,
+    pass:allPass,
+    by:currentAccount?(currentAccount.name||currentAccount.username):'',
+    ts:new Date().toISOString()
   };
   verifyLogs.unshift(rec);
   renderVerifyLog();
@@ -1080,9 +1220,14 @@ async function saveVerification(sku, p, scanned, expected, pass){
       Title: sku,
       SKU: sku,
       ProductName: p.name,
-      TUCScanned: scanned,
-      TUCExpected: expected,
-      Result: pass ? 'PASS' : 'FAIL',
+      TUCScanned: vState.tucScanned,
+      TUCExpected: String(p.tuc||''),
+      EAN13Scanned: vState.eanScanned,
+      EAN13Expected: String(p.ean13||''),
+      BBEScanned: vState.bbeTyped,
+      BBEExpected: vState.expectedBBE,
+      Result: allPass ? 'PASS' : 'FAIL',
+      VerificationType: 'Full',
       VerifiedBy: currentAccount?(currentAccount.name||currentAccount.username):'',
       RecordID: id
     }});
@@ -1093,40 +1238,56 @@ async function loadVerifications(){
   if(!verificationsListId) return;
   var today = new Date().toISOString().slice(0,10);
   try{
-    var data = await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields&$filter=fields/Result ne null');
+    var data = await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields');
     verifyLogs = data.value
       .filter(function(item){ return item.createdDateTime.slice(0,10) === today; })
       .map(function(item){
         var f = item.fields;
-        return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',scanned:f.TUCScanned||'',expected:f.TUCExpected||'',pass:f.Result==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
+        return{
+          id:f.RecordID||item.id, sku:f.SKU||'', name:f.ProductName||'',
+          tucScanned:f.TUCScanned||'', tucExpected:f.TUCExpected||'',
+          eanScanned:f.EAN13Scanned||'', eanExpected:f.EAN13Expected||'',
+          bbeTyped:f.BBEScanned||'', bbeExpected:f.BBEExpected||'',
+          tucPass:f.TUCScanned===f.TUCExpected,
+          eanPass:f.EAN13Scanned===f.EAN13Expected,
+          bbePass:f.BBEScanned===f.BBEExpected,
+          pass:f.Result==='PASS',
+          by:f.VerifiedBy||'', ts:item.createdDateTime
+        };
       });
     renderVerifyLog();
-  }catch(e){ toast('Could not load scan log: '+e.message, true); }
+  }catch(e){ toast('Could not load verification log: '+e.message, true); }
 }
 
 function renderVerifyLog(){
   var body = document.getElementById('v-log-body');
   var count = document.getElementById('v-log-count');
   count.textContent = verifyLogs.length;
-  if(!verifyLogs.length){ body.innerHTML='<div class="empty">No scans today</div>'; return; }
-  var html = '<table class="tbl"><thead><tr><th>Time</th><th>SKU</th><th>Product</th><th>Scanned</th><th>Result</th><th>User</th></tr></thead><tbody>';
+  if(!verifyLogs.length){ body.innerHTML='<div class="empty">No verifications today</div>'; return; }
+  var html = '<table class="tbl"><thead><tr><th>Time</th><th>SKU</th><th>Product</th><th>BBE</th><th>TUC</th><th>EAN-13</th><th>Result</th><th>User</th></tr></thead><tbody>';
   verifyLogs.forEach(function(r){
-    var passStyle = r.pass
-      ? 'color:#155724;background:#d4edda;padding:2px 10px;border-radius:99px;font-weight:600;font-size:12px'
-      : 'color:#721c24;background:#f8d7da;padding:2px 10px;border-radius:99px;font-weight:600;font-size:12px';
+    function badge(pass){
+      return pass
+        ? '<span style="background:#d4edda;color:#155724;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✓</span>'
+        : '<span style="background:#f8d7da;color:#721c24;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✗</span>';
+    }
+    var overallStyle = r.pass
+      ? 'color:#155724;background:#d4edda;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600'
+      : 'color:#721c24;background:#f8d7da;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600';
     html += '<tr>';
     html += '<td>'+new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td>';
     html += '<td><strong>'+r.sku+'</strong></td>';
     html += '<td>'+r.name+'</td>';
-    html += '<td class="mono">'+r.scanned+'</td>';
-    html += '<td><span style="'+passStyle+'">'+(r.pass?'PASS':'FAIL')+'</span></td>';
+    html += '<td>'+badge(r.bbePass)+' '+r.bbeTyped+'</td>';
+    html += '<td>'+badge(r.tucPass)+'</td>';
+    html += '<td>'+badge(r.eanPass)+'</td>';
+    html += '<td><span style="'+overallStyle+'">'+(r.pass?'PASS':'FAIL')+'</span></td>';
     html += '<td style="color:#aaa">'+r.by+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
   body.innerHTML = html;
 }
-
 // ── Code 128C barcode data ────────────────────────────────────────────────────
 var C128_PATTERNS=[[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],[2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1],[2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1],[2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1],[4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4],[2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1]];
 var C128_STOP=[2,3,3,1,1,1,2];
