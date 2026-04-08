@@ -54,61 +54,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .signin-screen h2{font-size:22px;font-weight:600}
 .signin-screen p{font-size:14px;color:#666;max-width:400px;line-height:1.7}
 .err-box{background:#fff5f5;border:1px solid #fcc;border-radius:8px;padding:12px 16px;font-size:13px;color:#c0392b;margin-top:8px;max-width:440px;line-height:1.6;text-align:left}
-.queue-card{display:none}
 .tab-row{display:flex;gap:4px;margin-bottom:1rem}
 .tab{height:32px;padding:0 14px;font-size:13px;border:1px solid transparent;border-radius:7px;cursor:pointer;background:transparent;color:#888;font-weight:500}
 .tab.active{border-color:#d8d8d5;color:#1c1c1a;background:#f5f5f4}
-
-/* ── PRINT STYLES ─────────────────────────────────────────────── */
-@media print {
-  html, body { margin:0; padding:0; background:#fff; }
-  body > *:not(#print-area) { display:none !important; }
-  #print-area {
-    display:block !important;
-    margin:0; padding:0;
-  }
-  .lpage {
-    width:148mm;
-    min-height:210mm;
-    border:1px solid #000;
-    font-family:Arial,Helvetica,sans-serif;
-    margin:0 auto;
-    background:#fff;
-    page-break-after:always;
-    display:flex;
-    flex-direction:column;
-  }
-  .lpage:last-child { page-break-after:avoid; }
-  .l-header {
-    background:#000 !important;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
-    color:#fff !important;
-    text-align:center;
-    padding:4mm 5mm 3mm;
-  }
-  .l-header .l-title { font-size:14pt; font-weight:bold; letter-spacing:.05em; }
-  .l-header .l-addr  { font-size:8pt; margin-top:1mm; }
-  .l-row { border-bottom:1px solid #000; padding:3mm 5mm; display:grid; font-size:9pt; }
-  .l-row.cols2 { grid-template-columns:1fr 1fr; gap:6mm; }
-  .l-row.cols3 { grid-template-columns:1fr 1fr 1fr; gap:4mm; }
-  .l-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; gap:3mm; }
-  .l-cell .lbl { font-size:7pt; color:#555; margin-bottom:1mm; }
-  .l-cell .val { font-size:10pt; font-weight:bold; color:#000; }
-  .l-cell .val.big { font-size:28pt; font-weight:900; }
-  .l-barcode-top { border-bottom:1px solid #000; padding:2mm 5mm; text-align:center; }
-  .l-barcode-bot { padding:3mm 5mm; text-align:center; margin-top:auto; }
-  .l-sscc-text { font-size:9pt; font-family:'Courier New',monospace; letter-spacing:.1em; font-weight:bold; margin-top:1mm; }
-  .l-sku-bbe { border-bottom:1px solid #000; padding:4mm 5mm; display:grid; grid-template-columns:1fr 1fr; gap:4mm; align-items:center; }
+@media print{
+  html,body{margin:0;padding:0;background:#fff}
+  body>*:not(#print-area){display:none !important}
+  #print-area{display:block !important;margin:0;padding:0}
+  .lpage{width:148mm;min-height:210mm;border:1px solid #000;font-family:Arial,Helvetica,sans-serif;margin:0 auto;background:#fff;page-break-after:always;display:flex;flex-direction:column}
+  .lpage:last-child{page-break-after:avoid}
 }
-#print-area { display:none; }
+#print-area{display:none}
 </style>
 </head>
 <body>
-
-<!-- ================================================================
-  CONFIGURATION
-================================================================ -->
 <script>
 const CONFIG = {
   clientId:  "5e0f988d-48b0-4fa0-b6ff-8f962641dfe1",
@@ -127,7 +86,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.0</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.1</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -149,47 +108,26 @@ const CONFIG = {
         <span style="font-size:12px;color:#aaa" id="serial-info"></span>
       </div>
     </div>
-
     <div class="card">
       <div class="sec-label">Label details</div>
-
       <div class="field">
         <label>SKU *</label>
-        <select id="f-sku" onchange="onSKUChange()">
-          <option value="">— select a product —</option>
-        </select>
+        <select id="f-sku" onchange="onSKUChange()"><option value="">— select a product —</option></select>
       </div>
-
       <div class="product-preview" id="product-preview">Product details will appear here once you select a SKU.</div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field">
-          <label>Batch number *</label>
-          <input id="f-batch" type="text" placeholder="e.g. B240315">
-        </div>
-        <div class="field">
-          <label>Best before (BBE) *</label>
-          <input id="f-bbe" type="month" placeholder="YYYY-MM">
-        </div>
+        <div class="field"><label>Batch number *</label><input id="f-batch" type="text" placeholder="e.g. B240315"></div>
+        <div class="field"><label>Best before (BBE) *</label><input id="f-bbe" type="month"></div>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field">
-          <label>Cases on pallet <span style="color:#aaa;font-weight:400">(overrides default)</span></label>
-          <input id="f-cases" type="number" placeholder="Leave blank to use product default">
-        </div>
-        <div class="field">
-          <label>Number of pallet labels *</label>
-          <input id="f-pallets" type="number" min="1" value="1" placeholder="1">
-        </div>
+        <div class="field"><label>Cases on pallet <span style="color:#aaa;font-weight:400">(overrides default)</span></label><input id="f-cases" type="number" placeholder="Leave blank to use product default"></div>
+        <div class="field"><label>Number of pallet labels *</label><input id="f-pallets" type="number" min="1" value="1"></div>
       </div>
-
       <div class="actions">
         <button class="btn primary" id="btn-gp" onclick="generateAndPrint()">Generate &amp; print label</button>
         <button class="btn" id="btn-aq" onclick="addToQueue()">Add to queue</button>
       </div>
     </div>
-
     <div class="card" id="queue-card" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
         <span style="font-weight:600;font-size:14px">Print queue <span class="badge" id="queue-count">0</span></span>
@@ -204,25 +142,13 @@ const CONFIG = {
 
   <!-- VERIFY PAGE -->
   <div id="page-verify" style="display:none">
-
     <div class="card" id="verify-main">
       <div class="sec-label">Label verification</div>
-
-      <!-- Step 1: Product + BBE -->
       <div id="v-step1">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div class="field">
-            <label>Select product *</label>
-            <select id="v-sku" onchange="onVerifySKUChange()">
-              <option value="">— select a product —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>BBE on label (MM/YYYY) *</label>
-            <input id="v-bbe-typed" type="text" placeholder="e.g. 09/2027" maxlength="7" oninput="onBBEInput(this)">
-          </div>
+          <div class="field"><label>Select product *</label><select id="v-sku" onchange="onVerifySKUChange()"><option value="">— select a product —</option></select></div>
+          <div class="field"><label>BBE on label (MM/YYYY) *</label><input id="v-bbe-typed" type="text" placeholder="e.g. 09/2027" maxlength="7" oninput="onBBEInput(this)"></div>
         </div>
-
         <div id="v-product-info" style="display:none;margin-bottom:12px">
           <div class="product-preview" id="v-product-preview"></div>
           <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px">
@@ -231,54 +157,27 @@ const CONFIG = {
             <div>Shelf life: <strong id="v-shelf-life">—</strong></div>
           </div>
         </div>
-
         <button class="btn primary" id="v-start-btn" style="display:none" onclick="startScanning()">Start scanning →</button>
       </div>
-
-      <!-- Step 2: Scan TUC (case label) -->
       <div id="v-step2" style="display:none">
-        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">
-          Step 1 of 2 — Scan case label (TUC barcode)
-        </div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:8px">
-          Expected: <span class="mono" id="v-tuc-expected-disp"></span>
-        </div>
-        <input id="v-tuc-input" type="text" placeholder="Scan TUC barcode…"
-          autocomplete="off"
-          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%"
-          oninput="onTUCScanInput()"
-          onkeydown="if(event.key==='Enter')processTUCScan()">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Step 1 of 2 — Scan case label (TUC barcode)</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:8px">Expected: <span class="mono" id="v-tuc-expected-disp"></span></div>
+        <input id="v-tuc-input" type="text" placeholder="Scan TUC barcode…" autocomplete="off" style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%" oninput="onTUCScanInput()" onkeydown="if(event.key==='Enter')processTUCScan()">
         <div style="font-size:12px;color:#aaa;margin-top:6px">Scanner submits automatically — no need to press Enter.</div>
       </div>
-
-      <!-- Step 3: Scan EAN-13 (bottle label) -->
       <div id="v-step3" style="display:none">
-        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">
-          Step 2 of 2 — Scan bottle label (EAN-13 barcode)
-        </div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:8px">
-          Expected: <span class="mono" id="v-ean-expected-disp"></span>
-        </div>
-        <input id="v-ean-input" type="text" placeholder="Scan EAN-13 barcode…"
-          autocomplete="off"
-          style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%"
-          oninput="onEANScanInput()"
-          onkeydown="if(event.key==='Enter')processEANScan()">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Step 2 of 2 — Scan bottle label (EAN-13 barcode)</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:8px">Expected: <span class="mono" id="v-ean-expected-disp"></span></div>
+        <input id="v-ean-input" type="text" placeholder="Scan EAN-13 barcode…" autocomplete="off" style="font-family:monospace;font-size:16px;height:48px;letter-spacing:.05em;width:100%" oninput="onEANScanInput()" onkeydown="if(event.key==='Enter')processEANScan()">
         <div style="font-size:12px;color:#aaa;margin-top:6px">Scanner submits automatically — no need to press Enter.</div>
       </div>
     </div>
-
-    <!-- Result flash panel -->
     <div id="v-result" style="display:none;border-radius:12px;padding:2rem;text-align:center;margin-bottom:1rem;transition:background .2s">
       <div id="v-result-icon" style="font-size:52px;margin-bottom:10px"></div>
       <div id="v-result-title" style="font-size:20px;font-weight:700;margin-bottom:8px"></div>
       <div id="v-result-detail" style="font-size:13px;line-height:1.8;text-align:left;display:inline-block"></div>
-      <div style="margin-top:1.25rem">
-        <button class="btn primary" onclick="resetVerify()">Verify another</button>
-      </div>
+      <div style="margin-top:1.25rem"><button class="btn primary" onclick="resetVerify()">Verify another</button></div>
     </div>
-
-    <!-- Scan log -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
         <span style="font-weight:600;font-size:14px">Today's verification log <span class="badge" id="v-log-count">0</span></span>
@@ -299,10 +198,7 @@ const CONFIG = {
       <div class="filter-row">
         <input id="search" type="text" placeholder="Search SKU or product…" oninput="renderHistory()" style="flex:1;min-width:160px">
         <select id="filter-date" onchange="renderHistory()">
-          <option value="">All time</option>
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
+          <option value="">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option>
         </select>
         <button class="btn" onclick="loadHistory()">Refresh</button>
         <button class="btn" onclick="exportCSV()">Export CSV</button>
@@ -317,21 +213,15 @@ const CONFIG = {
     <div class="card">
       <div class="sec-label">GS1 configuration</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="field" style="flex:1;min-width:160px">
-          <label>GS1 company prefix (7–10 digits)</label>
-          <input id="s-prefix" type="text" maxlength="10" placeholder="e.g. 5012345">
-        </div>
-        <div class="field" style="max-width:150px">
-          <label>Extension digit (0–9)</label>
-          <input id="s-ext" type="number" min="0" max="9">
-        </div>
+        <div class="field" style="flex:1;min-width:160px"><label>GS1 company prefix (7–10 digits)</label><input id="s-prefix" type="text" maxlength="10" placeholder="e.g. 5012345"></div>
+        <div class="field" style="max-width:150px"><label>Extension digit (0–9)</label><input id="s-ext" type="number" min="0" max="9"></div>
       </div>
       <div style="font-size:12px;color:#aaa;margin:.5rem 0 1rem">Your prefix is on your GS1 UK certificate.</div>
       <button class="btn primary" onclick="saveSettings()">Save settings</button>
     </div>
     <div class="card">
       <div class="sec-label">Product list</div>
-      <div style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Products are managed in your SharePoint list <strong>PalletProducts</strong>. Add, edit or remove products there — changes appear in the SKU dropdown immediately.</div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Products are managed in your SharePoint list <strong>PalletProducts</strong>.</div>
       <button class="btn" onclick="loadProducts()">Reload product list</button>
       <span style="font-size:12px;color:#aaa;margin-left:10px" id="product-count"></span>
     </div>
@@ -357,7 +247,6 @@ const CONFIG = {
 
 <div class="toast" id="toast"></div>
 
-<!-- MSAL with fallback CDNs -->
 <script>
 (function(){
   var cdns=[
@@ -368,12 +257,11 @@ const CONFIG = {
   function tryNext(){
     if(idx>=cdns.length){
       document.getElementById('signin-error').style.display='block';
-      document.getElementById('signin-error').innerHTML='<strong>Could not load sign-in library.</strong><br>Make sure you are opening this page via its https:// GitHub Pages URL in Microsoft Edge or Chrome. Do not open it as a local file.';
+      document.getElementById('signin-error').innerHTML='<strong>Could not load sign-in library.</strong><br>Make sure you are opening this page via its https:// GitHub Pages URL in Microsoft Edge or Chrome.';
       document.getElementById('signin-btn').disabled=true;
       return;
     }
-    var s=document.createElement('script');
-    s.src=cdns[idx++];
+    var s=document.createElement('script');s.src=cdns[idx++];
     s.onload=function(){window._msalLoaded=true;};
     s.onerror=function(){tryNext();};
     document.head.appendChild(s);
@@ -381,22 +269,21 @@ const CONFIG = {
   tryNext();
 })();
 </script>
-<!-- jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
-var msalApp=null, currentAccount=null;
-var allRecords=[], queue=[], selectedIds=new Set();
+var msalApp=null,currentAccount=null;
+var allRecords=[],queue=[],selectedIds=new Set();
 var products={};
 var cfg={prefix:'5012345',ext:3};
 var serialRef=1;
-var siteId=null, labelsListId=null, counterListId=null, counterItemId=null, productsListId=null, verificationsListId=null;
+var siteId=null,labelsListId=null,counterListId=null,counterItemId=null,productsListId=null,verificationsListId=null;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener('load',function(){
   if(CONFIG.clientId==='YOUR_CLIENT_ID_HERE'){
-    document.getElementById('signin-screen').innerHTML='<div style="max-width:480px;margin:4rem auto;text-align:center;padding:2rem"><div style="font-size:36px">⚙️</div><h2 style="font-size:20px;margin:12px 0">Setup required</h2><p style="color:#666;line-height:1.7">Open this file in a text editor and fill in the three CONFIG values: <strong>clientId</strong>, <strong>tenantId</strong>, and <strong>siteUrl</strong>.</p></div>';
+    document.getElementById('signin-screen').innerHTML='<div style="max-width:480px;margin:4rem auto;text-align:center;padding:2rem"><div style="font-size:36px">⚙️</div><h2 style="font-size:20px;margin:12px 0">Setup required</h2><p style="color:#666;line-height:1.7">Fill in <strong>clientId</strong>, <strong>tenantId</strong>, and <strong>siteUrl</strong> in the CONFIG block.</p></div>';
     return;
   }
   var attempts=0;
@@ -410,40 +297,31 @@ window.addEventListener('load',function(){
 function initApp(){
   try{
     msalApp=new msal.PublicClientApplication({
-      auth:{
-        clientId:CONFIG.clientId,
-        authority:'https://login.microsoftonline.com/'+CONFIG.tenantId,
-        redirectUri:window.location.origin+window.location.pathname
-      },
+      auth:{clientId:CONFIG.clientId,authority:'https://login.microsoftonline.com/'+CONFIG.tenantId,redirectUri:window.location.origin+window.location.pathname},
       cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:true}
     });
     var accounts=msalApp.getAllAccounts();
     if(accounts.length>0){currentAccount=accounts[0];afterSignIn();}
   }catch(e){showSignInError('Failed to initialise: '+e.message);}
 }
-
 function showSignInError(msg){
   document.getElementById('signin-status').textContent='';
   document.getElementById('signin-error').style.display='block';
   document.getElementById('signin-error').textContent=msg;
 }
-
 async function signIn(){
-  if(!msalApp){showSignInError('Sign-in library not ready — please refresh and try again.');return;}
+  if(!msalApp){showSignInError('Sign-in library not ready — please refresh.');return;}
   document.getElementById('signin-status').textContent='Opening sign-in window…';
   document.getElementById('signin-error').style.display='none';
   try{
     var r=await msalApp.loginPopup({scopes:['https://graph.microsoft.com/Sites.ReadWrite.All']});
-    currentAccount=r.account;
-    afterSignIn();
+    currentAccount=r.account;afterSignIn();
   }catch(e){
     document.getElementById('signin-status').textContent='';
-    showSignInError('Sign-in failed: '+e.message+'\n\nCheck that the redirect URI in Azure exactly matches: '+window.location.origin+window.location.pathname);
+    showSignInError('Sign-in failed: '+e.message+'\n\nCheck redirect URI matches: '+window.location.origin+window.location.pathname);
   }
 }
-
 function signOut(){if(msalApp)msalApp.logoutPopup({account:currentAccount});}
-
 async function afterSignIn(){
   document.getElementById('signin-screen').style.display='none';
   document.getElementById('main-app').style.display='';
@@ -468,7 +346,6 @@ async function graph(method,path,body){
   if(r.status===204)return null;
   return r.json();
 }
-
 async function resolveSiteAndLists(){
   try{
     var url=new URL(CONFIG.siteUrl);
@@ -507,39 +384,20 @@ async function loadProducts(){
       var f=item.fields;
       var sku=f.SKU||f.Title||'';
       if(!sku)return;
-      products[sku]={
-        sku:sku,
-        name:f.ProductName||'',
-        unitsPerCase:f.UnitsPerCase||'',
-        caseWeight:f.CaseWeight||'',
-        casesOnPallet:f.CasesOnPallet||'',
-        tuc:f.TUC||'',
-        info:f.Info||'',
-        ean13:f._x0045_AN13||'',
-        shelfLifeMonths:f.ShelfLifeMonths||''
-      };
-      var opt=document.createElement('option');
-      opt.value=sku;
-      opt.textContent=sku+' — '+f.ProductName;
+      products[sku]={sku:sku,name:f.ProductName||'',unitsPerCase:f.UnitsPerCase||'',caseWeight:f.CaseWeight||'',casesOnPallet:f.CasesOnPallet||'',tuc:f.TUC||'',info:f.Info||'',ean13:f._x0045_AN13||'',shelfLifeMonths:f.ShelfLifeMonths||''};
+      var opt=document.createElement('option');opt.value=sku;opt.textContent=sku+' — '+f.ProductName;
       sel.appendChild(opt);
     });
     document.getElementById('product-count').textContent=data.value.length+' products loaded';
     toast('Products loaded');
   }catch(e){toast('Could not load products: '+e.message,true);}
 }
-
 function onSKUChange(){
   var sku=document.getElementById('f-sku').value;
   var p=products[sku];
   var el=document.getElementById('product-preview');
   if(!p||!sku){el.textContent='Product details will appear here once you select a SKU.';return;}
-  el.innerHTML=
-    '<strong>'+p.name+'</strong><br>'+
-    'Units/case: <strong>'+p.unitsPerCase+'</strong> &nbsp;·&nbsp; '+
-    'Case weight: <strong>'+p.caseWeight+' kg</strong> &nbsp;·&nbsp; '+
-    'Cases/pallet (default): <strong>'+p.casesOnPallet+'</strong><br>'+
-    'TUC: <strong>'+p.tuc+'</strong><br>'+
-    'Info: <strong>'+p.info+'</strong>';
+  el.innerHTML='<strong>'+p.name+'</strong><br>Units/case: <strong>'+p.unitsPerCase+'</strong> &nbsp;·&nbsp; Case weight: <strong>'+p.caseWeight+' kg</strong> &nbsp;·&nbsp; Cases/pallet (default): <strong>'+p.casesOnPallet+'</strong><br>TUC: <strong>'+p.tuc+'</strong><br>Info: <strong>'+p.info+'</strong>';
   document.getElementById('f-cases').placeholder='Default: '+p.casesOnPallet;
 }
 
@@ -561,14 +419,12 @@ async function loadCounter(){
     }
   }catch(e){toast('Could not load counter: '+e.message,true);}
 }
-
 async function incrementCounter(){
   serialRef++;
   if(!counterItemId)return;
   try{await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{SerialRef:serialRef});}
   catch(e){toast('Warning: counter not saved — '+e.message,true);}
 }
-
 async function saveSettings(){
   var p=document.getElementById('s-prefix').value.replace(/\D/g,'');
   var e=parseInt(document.getElementById('s-ext').value);
@@ -577,8 +433,7 @@ async function saveSettings(){
   cfg.prefix=p;cfg.ext=e;
   try{
     await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{GS1Prefix:p,ExtDigit:e});
-    updateSSCCPreview();
-    toast('Settings saved');
+    updateSSCCPreview();toast('Settings saved');
   }catch(e2){toast('Save failed: '+e2.message,true);}
 }
 
@@ -599,8 +454,7 @@ function updateSSCCPreview(){
 }
 async function nextSSCC(){
   var sscc=buildSSCC(cfg.ext,cfg.prefix,serialRef);
-  await incrementCounter();
-  updateSSCCPreview();
+  await incrementCounter();updateSSCCPreview();
   return sscc;
 }
 
@@ -609,24 +463,13 @@ async function saveRecord(rec){
   if(!labelsListId){toast('Not connected',true);return;}
   try{
     await graph('POST','/sites/'+siteId+'/lists/'+labelsListId+'/items',{fields:{
-      Title:rec.sscc,
-      SKU:rec.sku,
-      ProductName:rec.name,
-      BatchNumber:rec.batch,
-      BestBefore:rec.bbe,
-      CasesOnPallet:rec.cases?parseInt(rec.cases):null,
-      CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
-      TUC:rec.tuc||'',
-      Info:rec.info||'',
-      GeneratedBy:rec.generatedBy||'',
-      RecordID:rec.id,
-      PalletNumber:rec.palletNumber||1,
-      BatchTotal:rec.batchTotal||1,
-      Status:rec.status||'Produced'
+      Title:rec.sscc,SKU:rec.sku,ProductName:rec.name,BatchNumber:rec.batch,BestBefore:rec.bbe,
+      CasesOnPallet:rec.cases?parseInt(rec.cases):null,CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
+      TUC:rec.tuc||'',Info:rec.info||'',GeneratedBy:rec.generatedBy||'',RecordID:rec.id,
+      PalletNumber:rec.palletNumber||1,BatchTotal:rec.batchTotal||1,Status:rec.status||'Produced'
     }});
   }catch(e){toast('Record not saved: '+e.message,true);}
 }
-
 async function loadHistory(){
   if(!labelsListId){toast('Not connected',true);return;}
   document.getElementById('history-body').innerHTML='<div class="empty">Loading…</div>';
@@ -645,26 +488,19 @@ async function loadHistory(){
 function collectForm(){
   var sku=document.getElementById('f-sku').value;
   var p=products[sku]||{};
-  var casesOverride=document.getElementById('f-cases').value;
-  var numPallets=parseInt(document.getElementById('f-pallets').value)||1;
   return{
-    sku:sku,
-    name:p.name||sku,
+    sku:sku,name:p.name||sku,
     batch:document.getElementById('f-batch').value.trim(),
     bbe:document.getElementById('f-bbe').value,
-    cases:casesOverride||String(p.casesOnPallet)||'',
-    caseWeight:String(p.caseWeight)||'',
-    unitsPerCase:String(p.unitsPerCase)||'',
-    tuc:String(p.tuc)||'',
-    info:String(p.info)||'',
-    numPallets:numPallets
+    cases:document.getElementById('f-cases').value||String(p.casesOnPallet)||'',
+    caseWeight:String(p.caseWeight)||'',unitsPerCase:String(p.unitsPerCase)||'',
+    tuc:String(p.tuc||''),info:String(p.info||''),
+    numPallets:parseInt(document.getElementById('f-pallets').value)||1
   };
 }
 function clearForm(){
-  document.getElementById('f-sku').value='';
-  document.getElementById('f-batch').value='';
-  document.getElementById('f-bbe').value='';
-  document.getElementById('f-cases').value='';
+  document.getElementById('f-sku').value='';document.getElementById('f-batch').value='';
+  document.getElementById('f-bbe').value='';document.getElementById('f-cases').value='';
   document.getElementById('f-pallets').value='1';
   document.getElementById('product-preview').textContent='Product details will appear here once you select a SKU.';
 }
@@ -676,70 +512,36 @@ function validate(d){
 }
 async function makeRecord(data){
   var generatedBy=currentAccount?(currentAccount.name||currentAccount.username||''):'';
-  return Object.assign({
-    id:Date.now()+'-'+Math.random().toString(36).substr(2,5),
-    sscc:await nextSSCC(),
-    ts:new Date().toISOString(),
-    generatedBy:generatedBy
-  },data);
+  return Object.assign({id:Date.now()+'-'+Math.random().toString(36).substr(2,5),sscc:await nextSSCC(),ts:new Date().toISOString(),generatedBy:generatedBy},data);
 }
 function setBusy(on){['btn-gp','btn-aq'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=on;});}
 
 async function generateAndPrint(){
-  var d=collectForm();
-  if(!validate(d))return;
-  var numPallets=d.numPallets||1;
+  var d=collectForm();if(!validate(d))return;
   setBusy(true);
   try{
     var recs=[];
-    for(var i=0;i<numPallets;i++){
-      var rec=await makeRecord(d);
-      rec.palletNumber=i+1;
-      rec.batchTotal=numPallets;
-      rec.status='Produced';
-      await saveRecord(rec);
-      recs.push(rec);
-    }
-    clearForm();
-    doPrint(recs);
-    toast('Generated '+numPallets+' label'+(numPallets>1?'s':'')+' — PDF downloading');
-  }catch(err){
-    console.error('generateAndPrint error:',err);
-    toast('Error: '+err.message,true);
-    alert('Error: '+err.message);
-  }
+    for(var i=0;i<d.numPallets;i++){var rec=await makeRecord(d);rec.palletNumber=i+1;rec.batchTotal=d.numPallets;rec.status='Produced';await saveRecord(rec);recs.push(rec);}
+    clearForm();doPrint(recs);
+    toast('Generated '+d.numPallets+' label'+(d.numPallets>1?'s':'')+' — PDF downloading');
+  }catch(err){console.error(err);toast('Error: '+err.message,true);alert('Error: '+err.message);}
   setBusy(false);
 }
-
 async function addToQueue(){
   var d=collectForm();if(!validate(d))return;
-  var numPallets=d.numPallets||1;
   setBusy(true);
-  for(var i=0;i<numPallets;i++){
-    var rec=await makeRecord(d);
-    rec.palletNumber=i+1;
-    rec.batchTotal=numPallets;
-    rec.status='Produced';
-    await saveRecord(rec);
-    queue.push(rec);
-  }
-  clearForm();
-  renderQueueUI();
-  setBusy(false);
-  toast('Added '+numPallets+' pallet'+(numPallets>1?'s':'')+' to queue');
+  for(var i=0;i<d.numPallets;i++){var rec=await makeRecord(d);rec.palletNumber=i+1;rec.batchTotal=d.numPallets;rec.status='Produced';await saveRecord(rec);queue.push(rec);}
+  clearForm();renderQueueUI();setBusy(false);
+  toast('Added '+d.numPallets+' pallet'+(d.numPallets>1?'s':'')+' to queue');
 }
-
 function renderQueueUI(){
   var card=document.getElementById('queue-card');
   document.getElementById('queue-count').textContent=queue.length;
   if(!queue.length){card.style.display='none';return;}
   card.style.display='';
   var html='<table class="tbl"><thead><tr><th>SSCC</th><th>SKU</th><th>Batch</th><th>BBE</th><th>Cases</th><th></th></tr></thead><tbody>';
-  queue.forEach(function(r,i){
-    html+='<tr><td class="mono">'+fmtSSCC(r.sscc)+'</td><td>'+r.sku+'</td><td>'+r.batch+'</td><td>'+fmtBBE(r.bbe)+'</td><td>'+(r.cases||'—')+'</td><td><button class="btn sm danger" onclick="removeQ('+i+')">✕</button></td></tr>';
-  });
-  html+='</tbody></table>';
-  document.getElementById('queue-body').innerHTML=html;
+  queue.forEach(function(r,i){html+='<tr><td class="mono">'+fmtSSCC(r.sscc)+'</td><td>'+r.sku+'</td><td>'+r.batch+'</td><td>'+fmtBBE(r.bbe)+'</td><td>'+(r.cases||'—')+'</td><td><button class="btn sm danger" onclick="removeQ('+i+')">✕</button></td></tr>';});
+  document.getElementById('queue-body').innerHTML=html+'</tbody></table>';
 }
 function removeQ(i){queue.splice(i,1);renderQueueUI();}
 function clearQueue(){queue=[];renderQueueUI();}
@@ -760,23 +562,16 @@ function renderHistory(){
     }
     return true;
   });
-  filtered.sort(function(a,b){
-    var dateDiff=new Date(b.ts).setSeconds(0,0)-new Date(a.ts).setSeconds(0,0);
-    if(dateDiff!==0)return dateDiff;
-    return(a.palletNumber||0)-(b.palletNumber||0);
-  });
+  filtered.sort(function(a,b){var dd=new Date(b.ts).setSeconds(0,0)-new Date(a.ts).setSeconds(0,0);return dd!==0?dd:(a.palletNumber||0)-(b.palletNumber||0);});
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
   var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Pallet #</th><th>Cases</th><th>Status</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
-    html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
-    var palletDisp=r.palletNumber?String(r.palletNumber):'—';
     var isDNP=r.status==='Did Not Produce';
-    var statusBadge=isDNP
-      ?'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
-      :'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
-    var rowStyle=isDNP?' style="opacity:.6;text-decoration:line-through"':'';
-    var truncName=r.name.length>22?r.name.substring(0,22)+'…':r.name;
-    html+='<td'+rowStyle+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rowStyle+'>'+fmtSSCC(r.sscc)+'</td><td'+rowStyle+'><strong>'+r.sku+'</strong></td><td'+rowStyle+' title="'+r.name+'">'+truncName+'</td><td'+rowStyle+'>'+(r.batch||'—')+'</td><td'+rowStyle+'>'+fmtBBE(r.bbe)+'</td><td'+rowStyle+'>'+palletDisp+'</td><td'+rowStyle+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rowStyle+'>'+(r.generatedBy||'')+'</td>';
+    var statusBadge=isDNP?'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>':'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
+    var rs=isDNP?' style="opacity:.6;text-decoration:line-through"':'';
+    var tn=r.name.length>22?r.name.substring(0,22)+'…':r.name;
+    html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
+    html+='<td'+rs+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rs+'>'+fmtSSCC(r.sscc)+'</td><td'+rs+'><strong>'+r.sku+'</strong></td><td'+rs+' title="'+r.name+'">'+tn+'</td><td'+rs+'>'+(r.batch||'—')+'</td><td'+rs+'>'+fmtBBE(r.bbe)+'</td><td'+rs+'>'+(r.palletNumber||'—')+'</td><td'+rs+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rs+'>'+(r.generatedBy||'')+'</td>';
     var btns='<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
     if(!isDNP)btns+=' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
     html+='<td style="white-space:nowrap">'+btns+'</td></tr>';
@@ -793,12 +588,9 @@ async function markDNP(id,spId){
   if(rec)rec.status='Did Not Produce';
   renderHistory();
   if(!spId||!labelsListId){toast('Could not update SharePoint — spId missing',true);return;}
-  try{
-    await graph('PATCH','/sites/'+siteId+'/lists/'+labelsListId+'/items/'+spId+'/fields',{Status:'Did Not Produce'});
-    toast('Marked as Did Not Produce');
-  }catch(e){toast('SharePoint update failed: '+e.message,true);}
+  try{await graph('PATCH','/sites/'+siteId+'/lists/'+labelsListId+'/items/'+spId+'/fields',{Status:'Did Not Produce'});toast('Marked as Did Not Produce');}
+  catch(e){toast('SharePoint update failed: '+e.message,true);}
 }
-
 function updateStats(){var today=new Date().toDateString();document.getElementById('stat-total').textContent=allRecords.length;document.getElementById('stat-today').textContent=allRecords.filter(function(r){return new Date(r.ts).toDateString()===today;}).length;document.getElementById('stat-serial').textContent=serialRef-1;}
 function exportCSV(){
   if(!allRecords.length){alert('Load history first');return;}
@@ -809,11 +601,8 @@ function exportCSV(){
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function fmtBBE(bbe){
-  if(!bbe)return'—';
-  var p=bbe.split('-');
-  if(p.length<2)return bbe;
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return months[parseInt(p[1])-1]+' '+p[0];
+  if(!bbe)return'—';var p=bbe.split('-');if(p.length<2)return bbe;
+  return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]+' '+p[0];
 }
 function fmtDate(iso){return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function showPage(p){
@@ -821,7 +610,7 @@ function showPage(p){
   document.querySelectorAll('.nav button').forEach(function(b,i){b.classList.toggle('active',['generate','verify','history','settings'][i]===p);});
   if(p==='history')loadHistory();
   if(p==='settings')updateSettingsForm();
-  if(p==='verify'){populateVerifySKU();loadVerifications();setTimeout(function(){var el=document.getElementById('v-scan-input');if(el&&el.style.display!=='none')el.focus();},300);}
+  if(p==='verify'){populateVerifySKU();loadVerifications();}
 }
 function updateSettingsForm(){document.getElementById('s-prefix').value=cfg.prefix;document.getElementById('s-ext').value=cfg.ext;}
 function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},isErr?5000:2500);}
@@ -829,34 +618,22 @@ function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=m
 // ── PDF / Print ───────────────────────────────────────────────────────────────
 function doPrint(recs){
   console.log('doPrint called with',recs.length,'records');
-  if(!window.jspdf){
-    toast('PDF library not loaded — check your internet connection and reload the page',true);
-    alert('PDF library (jsPDF) failed to load. Please refresh the page and try again.');
-    return;
-  }
+  if(!window.jspdf){toast('PDF library not loaded — reload the page',true);return;}
   try{
     var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
-
     recs.forEach(function(r,pageIndex){
       if(pageIndex>0)doc.addPage('a5','portrait');
-
       var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'-';
       var casesDisp=r.cases||'-';
       var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'-';
       var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
       var bbeDisp=fmtBBE(r.bbe);
-      var W=148;
-      var y=0;
+      var W=148,y=0;
 
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.rect(0,y,W,18,'S');
-      doc.setTextColor(0,0,0);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(12);
+      doc.setDrawColor(0);doc.setLineWidth(0.5);doc.rect(0,y,W,18,'S');
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(12);
       doc.text('SAUCE SHOP PALLET LABEL',W/2,y+7,{align:'center'});
-      doc.setFontSize(7);
-      doc.setFont('helvetica','normal');
+      doc.setFontSize(7);doc.setFont('helvetica','normal');
       doc.text('Sauce Shop Address: Unit 2/3 Centurion Way, Nottingham, NG2 1RW',W/2,y+13,{align:'center'});
       y+=18;
 
@@ -864,33 +641,29 @@ function doPrint(recs){
       function lbl(txt,x,yy){doc.setTextColor(100,100,100);doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(txt.toUpperCase(),x,yy);}
       function val(txt,x,yy,size){doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(size||9);doc.text(String(txt||'-'),x,yy);}
 
-      // Row: Name + SKU + Pallet number
       divider(y);
-      lbl('Name',4,y+5); val(r.name,4,y+10);
-      lbl('SKU',W/2+2,y+5); val(r.sku,W/2+2,y+10);
+      lbl('Name',4,y+5);val(r.name,4,y+10);
+      lbl('SKU',W/2+2,y+5);val(r.sku,W/2+2,y+10);
       if(r.palletNumber){lbl('Production Number',W*3/4+2,y+5);val(String(r.palletNumber),W*3/4+2,y+10,9);}
       y+=15;
 
-      // Row: Units/case, Cases, Case weight, Total weight
       divider(y);
       var cols=[4,W/4+2,W/2+2,W*3/4+2];
-      lbl('Units per Case',cols[0],y+4); val(r.unitsPerCase||'-',cols[0],y+9);
-      lbl('Cases on Pallet',cols[1],y+4); val(casesDisp,cols[1],y+9);
-      lbl('Case Weight',cols[2],y+4); val(caseWeightDisp,cols[2],y+9);
-      lbl('Total Weight',cols[3],y+4); val(totalWeight,cols[3],y+9);
+      lbl('Units per Case',cols[0],y+4);val(r.unitsPerCase||'-',cols[0],y+9);
+      lbl('Cases on Pallet',cols[1],y+4);val(casesDisp,cols[1],y+9);
+      lbl('Case Weight',cols[2],y+4);val(caseWeightDisp,cols[2],y+9);
+      lbl('Total Weight',cols[3],y+4);val(totalWeight,cols[3],y+9);
       y+=14;
 
-      // Row: Information
       divider(y);
       lbl('Information',4,y+4);
       doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
       doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-8});
       y+=14;
 
-      // Row: Batch + TUC
       divider(y);
-      lbl('Batch',4,y+4); val(r.batch,4,y+9);
-      lbl('TUC',W/2+2,y+4); val(r.tuc||'-',W/2+2,y+9);
+      lbl('Batch',4,y+4);val(r.batch,4,y+9);
+      lbl('TUC',W/2+2,y+4);val(r.tuc||'-',W/2+2,y+9);
       y+=14;
 
       // TUC barcode — ITF-14
@@ -903,45 +676,39 @@ function doPrint(recs){
         y+=25;
       }
 
-      // SKU + BBE large
       divider(y);
       lbl('SKU:',4,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);
-      doc.text(r.sku,16,y+18);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(r.sku,16,y+18);
       lbl('BBE:',W/2+2,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);
-      doc.text(bbeDisp,W/2+14,y+18);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(bbeDisp,W/2+14,y+18);
       y+=24;
 
       // SSCC barcode — GS1-128
       divider(y);
-      var ssccData=getGS1128BarcodeData(r.sscc);
-      drawBarcode(doc,ssccData,W/2,y+2,120,20,true);
+      var ssccBars=getGS1128BarcodeData(r.sscc);
+      drawBarcode128(doc,ssccBars,W/2,y+2,120,20);
       y+=26;
 
-      // SSCC text
       doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
       doc.text(ssccFull,W/2,y+4,{align:'center'});
       y+=8;
 
-      // Footer
       divider(y);
       doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);
-      var generatedByText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
-      doc.text('Generated: '+fmtDate(r.ts)+'   By: '+generatedByText,W/2,y+4,{align:'center',maxWidth:W-8});
+      var byText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
+      doc.text('Generated: '+fmtDate(r.ts)+'   By: '+byText,W/2,y+4,{align:'center',maxWidth:W-8});
     });
 
     var now=new Date();
-    var dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-    var timeStr=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
-    var skuStr=recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
-    var filename='pallet-label-'+dateStr+'-'+timeStr+'-'+skuStr+(recs.length>1?'-x'+recs.length:'')+'.pdf';
-    doc.save(filename);
+    var ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+    var sk=recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
+    doc.save('pallet-label-'+ds+'-'+ts+'-'+sk+(recs.length>1?'-x'+recs.length:'')+'.pdf');
     toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
   }catch(err){
     console.error('PDF generation error:',err);
     toast('PDF error: '+err.message,true);
-    alert('PDF generation failed: '+err.message+'\n\nCheck the browser console (F12) for details.');
+    alert('PDF generation failed: '+err.message);
   }
 }
 
@@ -950,73 +717,45 @@ var verifyLogs=[];
 var vState={sku:'',tucPass:null,eanPass:null,bbePass:null,tucScanned:'',eanScanned:'',bbeTyped:'',expectedBBE:''};
 
 function populateVerifySKU(){
-  var sel=document.getElementById('v-sku');
-  var current=sel.value;
+  var sel=document.getElementById('v-sku'),current=sel.value;
   sel.innerHTML='<option value="">— select a product —</option>';
   Object.keys(products).sort().forEach(function(sku){
-    var opt=document.createElement('option');
-    opt.value=sku;
-    opt.textContent=sku+' — '+products[sku].name;
-    sel.appendChild(opt);
+    var opt=document.createElement('option');opt.value=sku;opt.textContent=sku+' — '+products[sku].name;sel.appendChild(opt);
   });
   if(current)sel.value=current;
 }
-
-function calcExpectedBBE(shelfLifeMonths){
-  var d=new Date();
-  d.setMonth(d.getMonth()+parseInt(shelfLifeMonths));
-  var endOfMonth=new Date(d.getFullYear(),d.getMonth()+1,0);
-  var mm=String(endOfMonth.getMonth()+1).padStart(2,'0');
-  var yyyy=endOfMonth.getFullYear();
-  return mm+'/'+yyyy;
+function calcExpectedBBE(months){
+  var d=new Date();d.setMonth(d.getMonth()+parseInt(months));
+  var e=new Date(d.getFullYear(),d.getMonth()+1,0);
+  return String(e.getMonth()+1).padStart(2,'0')+'/'+e.getFullYear();
 }
-
 function onVerifySKUChange(){updateVerifyInfo();}
-
 function onBBEInput(el){
-  var v=el.value.replace(/\D/g,'');
-  if(v.length>2)v=v.substring(0,2)+'/'+v.substring(2,6);
-  el.value=v;
-  updateVerifyInfo();
+  var v=el.value.replace(/\D/g,'');if(v.length>2)v=v.substring(0,2)+'/'+v.substring(2,6);
+  el.value=v;updateVerifyInfo();
 }
-
 function updateVerifyInfo(){
   var sku=document.getElementById('v-sku').value;
   var bbeTyped=document.getElementById('v-bbe-typed').value.trim();
   var p=products[sku];
-  var infoEl=document.getElementById('v-product-info');
-  var startBtn=document.getElementById('v-start-btn');
   document.getElementById('v-result').style.display='none';
-  if(!p||!sku){infoEl.style.display='none';startBtn.style.display='none';return;}
-  var shelfLife=p.shelfLifeMonths||'';
-  var expectedBBE=shelfLife?calcExpectedBBE(shelfLife):'Not set';
+  if(!p||!sku){document.getElementById('v-product-info').style.display='none';document.getElementById('v-start-btn').style.display='none';return;}
+  var expectedBBE=p.shelfLifeMonths?calcExpectedBBE(p.shelfLifeMonths):'Not set';
   vState.expectedBBE=expectedBBE;
-  document.getElementById('v-product-preview').innerHTML=
-    '<strong>'+p.name+'</strong> &nbsp;·&nbsp; SKU: <strong>'+sku+'</strong><br>'+
-    'TUC: <strong class="mono">'+(p.tuc||'Not set')+'</strong> &nbsp;·&nbsp; '+
-    'EAN-13: <strong class="mono">'+(p.ean13||'Not set')+'</strong>';
+  document.getElementById('v-product-preview').innerHTML='<strong>'+p.name+'</strong> &nbsp;·&nbsp; SKU: <strong>'+sku+'</strong><br>TUC: <strong class="mono">'+(p.tuc||'Not set')+'</strong> &nbsp;·&nbsp; EAN-13: <strong class="mono">'+(p.ean13||'Not set')+'</strong>';
   document.getElementById('v-expected-bbe').textContent=expectedBBE;
-  document.getElementById('v-shelf-life').textContent=shelfLife?shelfLife+' months':'Not set';
+  document.getElementById('v-shelf-life').textContent=p.shelfLifeMonths?p.shelfLifeMonths+' months':'Not set';
   var bbeCheckEl=document.getElementById('v-bbe-check');
   if(bbeTyped.length===7){
-    var bbeMatch=bbeTyped===expectedBBE;
-    bbeCheckEl.textContent=bbeMatch?'✓ Correct':'✗ Mismatch';
-    bbeCheckEl.style.color=bbeMatch?'#155724':'#c0392b';
-    vState.bbePass=bbeMatch;
-    vState.bbeTyped=bbeTyped;
-  }else{
-    bbeCheckEl.textContent='—';
-    bbeCheckEl.style.color='#888';
-    vState.bbePass=null;
-  }
-  infoEl.style.display='';
-  startBtn.style.display=(bbeTyped.length===7)?'':'none';
+    var match=bbeTyped===expectedBBE;
+    bbeCheckEl.textContent=match?'✓ Correct':'✗ Mismatch';bbeCheckEl.style.color=match?'#155724':'#c0392b';
+    vState.bbePass=match;vState.bbeTyped=bbeTyped;
+  }else{bbeCheckEl.textContent='—';bbeCheckEl.style.color='#888';vState.bbePass=null;}
+  document.getElementById('v-product-info').style.display='';
+  document.getElementById('v-start-btn').style.display=(bbeTyped.length===7)?'':'none';
 }
-
 function startScanning(){
-  var sku=document.getElementById('v-sku').value;
-  var p=products[sku];
-  if(!p)return;
+  var sku=document.getElementById('v-sku').value,p=products[sku];if(!p)return;
   vState.sku=sku;vState.tucScanned='';vState.eanScanned='';vState.tucPass=null;vState.eanPass=null;
   document.getElementById('v-step1').style.display='none';
   document.getElementById('v-step2').style.display='';
@@ -1027,81 +766,51 @@ function startScanning(){
   document.getElementById('v-tuc-input').value='';
   setTimeout(function(){document.getElementById('v-tuc-input').focus();},100);
 }
-
-function onTUCScanInput(){
-  var inp=document.getElementById('v-tuc-input');
-  clearTimeout(inp._t);
-  inp._t=setTimeout(function(){if(inp.value.length>4)processTUCScan();},300);
-}
-
+function onTUCScanInput(){var inp=document.getElementById('v-tuc-input');clearTimeout(inp._t);inp._t=setTimeout(function(){if(inp.value.length>4)processTUCScan();},300);}
 function processTUCScan(){
-  var sku=vState.sku;var p=products[sku];if(!p)return;
-  var scanned=document.getElementById('v-tuc-input').value.trim().replace(/\D/g,'');
-  if(!scanned)return;
-  var expected=String(p.tuc||'').replace(/\D/g,'');
-  vState.tucScanned=scanned;vState.tucPass=(scanned===expected);
+  var p=products[vState.sku];if(!p)return;
+  var scanned=document.getElementById('v-tuc-input').value.trim().replace(/\D/g,'');if(!scanned)return;
+  vState.tucScanned=scanned;vState.tucPass=(scanned===String(p.tuc||'').replace(/\D/g,''));
   document.getElementById('v-tuc-input').value='';
-  document.getElementById('v-step2').style.display='none';
-  document.getElementById('v-step3').style.display='';
+  document.getElementById('v-step2').style.display='none';document.getElementById('v-step3').style.display='';
   setTimeout(function(){document.getElementById('v-ean-input').focus();},100);
 }
-
-function onEANScanInput(){
-  var inp=document.getElementById('v-ean-input');
-  clearTimeout(inp._t);
-  inp._t=setTimeout(function(){if(inp.value.length>4)processEANScan();},300);
-}
-
+function onEANScanInput(){var inp=document.getElementById('v-ean-input');clearTimeout(inp._t);inp._t=setTimeout(function(){if(inp.value.length>4)processEANScan();},300);}
 function processEANScan(){
-  var sku=vState.sku;var p=products[sku];if(!p)return;
-  var scanned=document.getElementById('v-ean-input').value.trim().replace(/\D/g,'');
-  if(!scanned)return;
-  var expected=String(p.ean13||'').replace(/\D/g,'');
-  vState.eanScanned=scanned;vState.eanPass=(scanned===expected);
-  document.getElementById('v-ean-input').value='';
-  showVerifyResult();
+  var p=products[vState.sku];if(!p)return;
+  var scanned=document.getElementById('v-ean-input').value.trim().replace(/\D/g,'');if(!scanned)return;
+  vState.eanScanned=scanned;vState.eanPass=(scanned===String(p.ean13||'').replace(/\D/g,''));
+  document.getElementById('v-ean-input').value='';showVerifyResult();
 }
-
 function showVerifyResult(){
-  var sku=vState.sku;var p=products[sku];
+  var p=products[vState.sku];
   var allPass=vState.bbePass&&vState.tucPass&&vState.eanPass;
-  document.getElementById('v-step2').style.display='none';
-  document.getElementById('v-step3').style.display='none';
+  document.getElementById('v-step2').style.display='none';document.getElementById('v-step3').style.display='none';
   var resultEl=document.getElementById('v-result');
-  resultEl.style.display='';
-  resultEl.style.background=allPass?'#d4edda':'#f8d7da';
+  resultEl.style.display='';resultEl.style.background=allPass?'#d4edda':'#f8d7da';
   resultEl.style.border='2px solid '+(allPass?'#28a745':'#dc3545');
   document.getElementById('v-result-icon').textContent=allPass?'✓':'✗';
   document.getElementById('v-result-icon').style.color=allPass?'#28a745':'#dc3545';
   document.getElementById('v-result-title').textContent=allPass?'ALL CHECKS PASSED':'VERIFICATION FAILED';
   document.getElementById('v-result-title').style.color=allPass?'#155724':'#721c24';
   function checkRow(label,pass,scanned,expected){
-    var icon=pass?'✓':'✗';var col=pass?'#155724':'#c0392b';
-    var row='<div style="color:'+col+'"><strong>'+icon+' '+label+'</strong>';
+    var row='<div style="color:'+(pass?'#155724':'#c0392b')+'"><strong>'+(pass?'✓':'✗')+' '+label+'</strong>';
     if(!pass)row+=' — Scanned: <span class="mono">'+scanned+'</span> | Expected: <span class="mono">'+expected+'</span>';
-    row+='</div>';return row;
+    return row+'</div>';
   }
-  var detail=checkRow('BBE',vState.bbePass,vState.bbeTyped,vState.expectedBBE);
-  detail+=checkRow('Case label (TUC)',vState.tucPass,vState.tucScanned,String(p.tuc||'').replace(/\D/g,''));
-  detail+=checkRow('Bottle label (EAN-13)',vState.eanPass,vState.eanScanned,String(p.ean13||'').replace(/\D/g,''));
-  document.getElementById('v-result-detail').innerHTML=detail;
-  playBeep(allPass);
-  saveVerification(sku,p,allPass);
+  document.getElementById('v-result-detail').innerHTML=
+    checkRow('BBE',vState.bbePass,vState.bbeTyped,vState.expectedBBE)+
+    checkRow('Case label (TUC)',vState.tucPass,vState.tucScanned,String(p.tuc||'').replace(/\D/g,''))+
+    checkRow('Bottle label (EAN-13)',vState.eanPass,vState.eanScanned,String(p.ean13||'').replace(/\D/g,''));
+  playBeep(allPass);saveVerification(vState.sku,p,allPass);
   if(allPass){clearTimeout(resultEl._t);resultEl._t=setTimeout(function(){resetVerify();},5000);}
 }
-
 function playBeep(pass){
-  try{
-    var ctx=new(window.AudioContext||window.webkitAudioContext)();
-    var osc=ctx.createOscillator();var gain=ctx.createGain();
-    osc.connect(gain);gain.connect(ctx.destination);
-    osc.frequency.value=pass?880:220;osc.type=pass?'sine':'sawtooth';
-    gain.gain.setValueAtTime(0.3,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(pass?0.4:0.6));
-    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+(pass?0.4:0.6));
-  }catch(e){}
+  try{var ctx=new(window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);osc.frequency.value=pass?880:220;osc.type=pass?'sine':'sawtooth';
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(pass?0.4:0.6));
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+(pass?0.4:0.6));}catch(e){}
 }
-
 function resetVerify(){
   vState={sku:'',tucPass:null,eanPass:null,bbePass:null,tucScanned:'',eanScanned:'',bbeTyped:'',expectedBBE:''};
   document.getElementById('v-result').style.display='none';
@@ -1109,62 +818,58 @@ function resetVerify(){
   document.getElementById('v-step2').style.display='none';
   document.getElementById('v-step3').style.display='none';
   document.getElementById('v-bbe-typed').value='';
-  document.getElementById('v-bbe-check').textContent='—';
-  document.getElementById('v-bbe-check').style.color='#888';
-  document.getElementById('v-start-btn').style.display='none';
-  document.getElementById('v-product-info').style.display='none';
+  document.getElementById('v-bbe-check').textContent='—';document.getElementById('v-bbe-check').style.color='#888';
+  document.getElementById('v-start-btn').style.display='none';document.getElementById('v-product-info').style.display='none';
   document.getElementById('v-sku').value='';
 }
-
 async function saveVerification(sku,p,allPass){
   if(!verificationsListId)return;
   var id=Date.now()+'-'+Math.random().toString(36).substr(2,5);
-  var rec={id:id,sku:sku,name:p.name,tucScanned:vState.tucScanned,tucExpected:String(p.tuc||''),eanScanned:vState.eanScanned,eanExpected:String(p.ean13||''),bbeTyped:vState.bbeTyped,bbeExpected:vState.expectedBBE,tucPass:vState.tucPass,eanPass:vState.eanPass,bbePass:vState.bbePass,pass:allPass,by:currentAccount?(currentAccount.name||currentAccount.username):'',ts:new Date().toISOString()};
-  verifyLogs.unshift(rec);
+  verifyLogs.unshift({id:id,sku:sku,name:p.name,tucScanned:vState.tucScanned,eanScanned:vState.eanScanned,bbeTyped:vState.bbeTyped,bbeExpected:vState.expectedBBE,tucPass:vState.tucPass,eanPass:vState.eanPass,bbePass:vState.bbePass,pass:allPass,by:currentAccount?(currentAccount.name||currentAccount.username):'',ts:new Date().toISOString()});
   renderVerifyLog();
   try{
     await graph('POST','/sites/'+siteId+'/lists/'+verificationsListId+'/items',{fields:{
-      Title:sku,SKU:sku,ProductName:p.name,
-      TUCScanned:vState.tucScanned,EAN13Scanned:vState.eanScanned,EAN13Expected:String(p.ean13||''),
-      BBEScanned:vState.bbeTyped,BBEExpected:vState.expectedBBE,
+      Title:sku,SKU:sku,ProductName:p.name,TUCScanned:vState.tucScanned,EAN13Scanned:vState.eanScanned,
+      EAN13Expected:String(p.ean13||''),BBEScanned:vState.bbeTyped,BBEExpected:vState.expectedBBE,
       VerificationType:(allPass?'PASS':'FAIL'),RecordID:id
     }});
   }catch(e){toast('Verification not saved: '+e.message,true);}
 }
-
 async function loadVerifications(){
   if(!verificationsListId)return;
   var today=new Date().toISOString().slice(0,10);
   try{
     var data=await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields');
-    verifyLogs=data.value
-      .filter(function(item){return item.createdDateTime.slice(0,10)===today;})
-      .map(function(item){
-        var f=item.fields;
-        return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',tucScanned:f.TUCScanned||'',tucExpected:f.TUCExpected||'',eanScanned:f.EAN13Scanned||'',eanExpected:f.EAN13Expected||'',bbeTyped:f.BBEScanned||'',bbeExpected:f.BBEExpected||'',tucPass:f.TUCScanned===f.TUCExpected,eanPass:f.EAN13Scanned===f.EAN13Expected,bbePass:f.BBEScanned===f.BBEExpected,pass:f.Result==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
-      });
+    verifyLogs=data.value.filter(function(item){return item.createdDateTime.slice(0,10)===today;}).map(function(item){
+      var f=item.fields;
+      return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',tucScanned:f.TUCScanned||'',eanScanned:f.EAN13Scanned||'',bbeTyped:f.BBEScanned||'',bbeExpected:f.BBEExpected||'',tucPass:f.TUCScanned===(f.TUCExpected||''),eanPass:f.EAN13Scanned===f.EAN13Expected,bbePass:f.BBEScanned===f.BBEExpected,pass:f.Result==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
+    });
     renderVerifyLog();
   }catch(e){toast('Could not load verification log: '+e.message,true);}
 }
-
 function renderVerifyLog(){
   var body=document.getElementById('v-log-body');
   document.getElementById('v-log-count').textContent=verifyLogs.length;
   if(!verifyLogs.length){body.innerHTML='<div class="empty">No verifications today</div>';return;}
+  function badge(pass){return pass?'<span style="background:#d4edda;color:#155724;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✓</span>':'<span style="background:#f8d7da;color:#721c24;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✗</span>';}
   var html='<table class="tbl"><thead><tr><th>Time</th><th>SKU</th><th>Product</th><th>BBE</th><th>TUC</th><th>EAN-13</th><th>Result</th><th>User</th></tr></thead><tbody>';
   verifyLogs.forEach(function(r){
-    function badge(pass){return pass?'<span style="background:#d4edda;color:#155724;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✓</span>':'<span style="background:#f8d7da;color:#721c24;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✗</span>';}
-    var overallStyle=r.pass?'color:#155724;background:#d4edda;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600':'color:#721c24;background:#f8d7da;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600';
-    html+='<tr><td>'+new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td><strong>'+r.sku+'</strong></td><td>'+r.name+'</td><td>'+badge(r.bbePass)+' '+r.bbeTyped+'</td><td>'+badge(r.tucPass)+'</td><td>'+badge(r.eanPass)+'</td><td><span style="'+overallStyle+'">'+(r.pass?'PASS':'FAIL')+'</span></td><td style="color:#aaa">'+r.by+'</td></tr>';
+    var os=r.pass?'color:#155724;background:#d4edda':'color:#721c24;background:#f8d7da';
+    html+='<tr><td>'+new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td><strong>'+r.sku+'</strong></td><td>'+r.name+'</td><td>'+badge(r.bbePass)+' '+r.bbeTyped+'</td><td>'+badge(r.tucPass)+'</td><td>'+badge(r.eanPass)+'</td><td><span style="'+os+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">'+(r.pass?'PASS':'FAIL')+'</span></td><td style="color:#aaa">'+r.by+'</td></tr>';
   });
   body.innerHTML=html+'</tbody></table>';
 }
 
-// ── GS1-128 barcode (Code 128C + FNC1) ───────────────────────────────────────
-// Data symbols 0–102, verified against ISO/IEC 15417 via Wikipedia Code 128 table.
-var C128_PATTERNS=[
-  [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2], // 0-4
-  [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3], // 5-9
+// ═══════════════════════════════════════════════════════════════════════════════
+// BARCODE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Code 128 symbol patterns (values 0–102) ───────────────────────────────────
+// Each entry is [bar,space,bar,space,bar,space] widths in modules.
+// Verified against ISO/IEC 15417 / Wikipedia Code 128 symbol table.
+var C128 = [
+  [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2], //  0- 4
+  [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3], //  5- 9
   [2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1], // 10-14
   [1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2], // 15-19
   [2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2], // 20-24
@@ -1185,84 +890,49 @@ var C128_PATTERNS=[
   [1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1], // 95-99
   [1,1,1,1,4,1],[1,1,4,1,1,1],[1,4,1,1,1,1]                               // 100-102
 ];
-// Special symbols (outside the 0-102 data range):
-var C128_START_C  = [2,1,1,4,1,2]; // symbol 105  pattern 211412
-var C128_FNC1_PATTERN = [1,1,1,1,4,1]; // symbol 102  pattern 111141
-var C128_STOP_PAT = [2,3,3,1,1,1,2]; // stop pattern (13 units: 6-symbol + trailing 2-unit bar)
+// Special symbols outside the 0-102 data range — defined as named constants.
+var C128_START_C   = [2,1,1,4,1,2]; // symbol 105
+var C128_FNC1      = [1,1,1,1,4,1]; // symbol 102 (same value as C128[102] but explicit)
+var C128_STOP      = [2,3,3,1,1,1,2]; // stop pattern (13-unit, trailing 2-module bar)
 
+// ── GS1-128 encoder ───────────────────────────────────────────────────────────
 function getGS1128BarcodeData(sscc){
   var digits=sscc.replace(/\D/g,'');
   if(digits.length%2!==0)digits='0'+digits;
 
-  var chk=105+102*1;
-  var pos=2;
-  var dataPairs=[];
+  // Checksum = (105 + 102×1 + Σ pair_value×position) mod 103
+  // position starts at 2 for first data pair (FNC1 occupies position 1)
+  var chk=105+102, pos=2, pairs=[];
   for(var i=0;i<digits.length;i+=2){
     var v=parseInt(digits.substring(i,i+2));
-    dataPairs.push(v);
-    chk+=v*pos;
-    pos++;
+    pairs.push(v); chk+=v*pos; pos++;
   }
   chk=chk%103;
 
-  function patFor(sym){
-    if(sym===102)return C128_FNC1_PATTERN;
-    var p=C128_PATTERNS[sym];
-    if(!p)console.error('GS1-128: missing pattern for symbol',sym);
-    return p||[];
-  }
-
+  // Assemble bars
   var bars=[];
-  C128_START_C.forEach(function(b){bars.push(b);}); // Start C
-  C128_FNC1_PATTERN.forEach(function(b){bars.push(b);}); // FNC1
-  dataPairs.forEach(function(v){patFor(v).forEach(function(b){bars.push(b);});});
-  patFor(chk).forEach(function(b){bars.push(b);}); // Check
-  C128_STOP.forEach(function(b){bars.push(b);});   // Stop
+  function emit(pat){pat.forEach(function(b){bars.push(b);});}
+  emit(C128_START_C);
+  emit(C128_FNC1);
+  pairs.forEach(function(v){
+    var p=C128[v];
+    if(p)emit(p);
+    else console.error('GS1-128: no pattern for pair value',v);
+  });
+  // Check symbol — value 102 means FNC1 pattern
+  emit(chk===102 ? C128_FNC1 : (C128[chk]||[]));
+  emit(C128_STOP);
   return bars;
 }
 
-// ── ITF-14 barcode ────────────────────────────────────────────────────────────
-var ITF_PATTERNS=[
-  [1,1,2,2,1], // 0
-  [2,1,1,1,2], // 1
-  [1,2,1,1,2], // 2
-  [2,2,1,1,1], // 3
-  [1,1,2,1,2], // 4
-  [2,1,2,1,1], // 5
-  [1,2,2,1,1], // 6
-  [1,1,1,2,2], // 7
-  [2,1,1,2,1], // 8
-  [1,2,1,2,1]  // 9
-];
-
-function getITF14BarcodeData(tuc){
-  var digits=tuc.replace(/\D/g,'');
-  while(digits.length<14)digits='0'+digits;
-  digits=digits.substring(0,14);
-  var elements=[];
-  // Start: narrow bar + narrow space
-  elements.push({w:1,bar:true},{w:1,bar:false});
-  for(var i=0;i<14;i+=2){
-    var d1=parseInt(digits[i]);
-    var d2=parseInt(digits[i+1]);
-    var p1=ITF_PATTERNS[d1]; // bars
-    var p2=ITF_PATTERNS[d2]; // spaces
-    for(var j=0;j<5;j++){
-      elements.push({w:p1[j],bar:true});
-      elements.push({w:p2[j],bar:false});
-    }
-  }
-  // Stop: wide bar + narrow space + narrow bar
-  elements.push({w:2,bar:true},{w:1,bar:false},{w:1,bar:true});
-  return elements;
-}
-
-// ── Draw: Code 128 / GS1-128 ──────────────────────────────────────────────────
-function drawBarcode(doc,bars,centerX,startY,totalWidthMM,heightMM,withQuiet){
+// ── GS1-128 draw ─────────────────────────────────────────────────────────────
+// bars = flat array of module-widths, alternating bar/space starting with bar.
+// Quiet zone of 10 modules min is built into the padding passed by the caller.
+function drawBarcode128(doc, bars, centerX, startY, totalWidthMM, heightMM){
   var totalUnits=bars.reduce(function(a,b){return a+b;},0);
-  var quiet=withQuiet?2:0;
-  var unitW=(totalWidthMM-quiet*2)/totalUnits;
-  var x=centerX-totalWidthMM/2+quiet;
+  var quietMM=3; // 3 mm quiet zone each side
+  var unitW=(totalWidthMM-quietMM*2)/totalUnits;
+  var x=centerX-totalWidthMM/2+quietMM;
   doc.setFillColor(255,255,255);
   doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM,'F');
   bars.forEach(function(b,i){
@@ -1271,25 +941,44 @@ function drawBarcode(doc,bars,centerX,startY,totalWidthMM,heightMM,withQuiet){
   });
 }
 
-// ── Draw: ITF-14 with bearer bars ─────────────────────────────────────────────
-function drawITF14(doc,elements,centerX,startY,totalWidthMM,heightMM){
-  var totalUnits=elements.reduce(function(a,e){return a+e.w;},0);
-  var quietMM=3;
+// ── ITF-14 encoder ────────────────────────────────────────────────────────────
+// Interleaved 2-of-5: pairs of digits interleaved (odd=bars, even=spaces).
+// N=narrow (1 unit), W=wide (2.5 units — we use 2 for compact PDF output).
+var ITF=[
+  [1,1,2,2,1],[2,1,1,1,2],[1,2,1,1,2],[2,2,1,1,1],[1,1,2,1,2],
+  [2,1,2,1,1],[1,2,2,1,1],[1,1,1,2,2],[2,1,1,2,1],[1,2,1,2,1]
+];
+function getITF14BarcodeData(tuc){
+  var d=tuc.replace(/\D/g,'');
+  while(d.length<14)d='0'+d; d=d.substring(0,14);
+  var els=[];
+  // Start: narrow bar, narrow space
+  els.push({w:1,bar:true},{w:1,bar:false});
+  for(var i=0;i<14;i+=2){
+    var p1=ITF[parseInt(d[i])],p2=ITF[parseInt(d[i+1])];
+    for(var j=0;j<5;j++){els.push({w:p1[j],bar:true});els.push({w:p2[j],bar:false});}
+  }
+  // Stop: wide bar, narrow space, narrow bar
+  els.push({w:2,bar:true},{w:1,bar:false},{w:1,bar:true});
+  return els;
+}
+
+// ── ITF-14 draw ───────────────────────────────────────────────────────────────
+function drawITF14(doc, els, centerX, startY, totalWidthMM, heightMM){
+  var totalUnits=els.reduce(function(a,e){return a+e.w;},0);
+  var quietMM=3, bearerH=1.0;
   var unitW=(totalWidthMM-quietMM*2)/totalUnits;
-  var bearerH=1.0;
   // White background
   doc.setFillColor(255,255,255);
   doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM+bearerH*2,'F');
-  // Top bearer bar
+  // Bearer bars
   doc.setFillColor(0,0,0);
   doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,bearerH,'F');
-  // Bottom bearer bar
   doc.rect(centerX-totalWidthMM/2,startY+bearerH+heightMM,totalWidthMM,bearerH,'F');
   // Bars
   var x=centerX-totalWidthMM/2+quietMM;
-  var barTop=startY+bearerH;
-  elements.forEach(function(e){
-    if(e.bar){doc.setFillColor(0,0,0);doc.rect(x,barTop,e.w*unitW,heightMM,'F');}
+  els.forEach(function(e){
+    if(e.bar){doc.setFillColor(0,0,0);doc.rect(x,startY+bearerH,e.w*unitW,heightMM,'F');}
     x+=e.w*unitW;
   });
 }
