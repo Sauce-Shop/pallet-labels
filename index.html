@@ -86,7 +86,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.3</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.2</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -683,9 +683,9 @@ function doPrint(recs){
       doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(bbeDisp,W/2+14,y+18);
       y+=24;
 
-      // SSCC barcode — GS1-128 (FNC1 prefix via \xF1 triggers GS1-128 mode in JsBarcode)
+      // SSCC barcode — GS1-128
       divider(y);
-      addBarcodeToDoc(doc, '\xF1' + r.sscc, 'CODE128', W/2, y+2, 120, 20);
+      addBarcodeToDoc(doc, r.sscc, 'CODE128', W/2, y+2, 120, 20);
       y+=26;
 
       doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
