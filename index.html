@@ -86,7 +86,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.1</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.2</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -270,6 +270,7 @@ const CONFIG = {
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -669,10 +670,9 @@ function doPrint(recs){
       // TUC barcode — ITF-14
       if(r.tuc){
         divider(y);
-        var tucData=getITF14BarcodeData(r.tuc);
-        drawITF14(doc,tucData,W/2,y+2,90,16);
+        addBarcodeToDoc(doc, r.tuc, 'ITF14', W/2, y+2, 90, 16);
         doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
-        doc.text('TUC: '+r.tuc,W/2,y+22,{align:'center'});
+        doc.text('TUC: '+r.tuc, W/2, y+22, {align:'center'});
         y+=25;
       }
 
@@ -685,8 +685,7 @@ function doPrint(recs){
 
       // SSCC barcode — GS1-128
       divider(y);
-      var ssccBars=getGS1128BarcodeData(r.sscc);
-      drawBarcode128(doc,ssccBars,W/2,y+2,120,20);
+      addBarcodeToDoc(doc, r.sscc, 'CODE128', W/2, y+2, 120, 20);
       y+=26;
 
       doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
@@ -861,126 +860,39 @@ function renderVerifyLog(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BARCODE ENGINE
+// BARCODE ENGINE — uses JsBarcode to render to canvas, then inserts into PDF
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Code 128 symbol patterns (values 0–102) ───────────────────────────────────
-// Each entry is [bar,space,bar,space,bar,space] widths in modules.
-// Verified against ISO/IEC 15417 / Wikipedia Code 128 symbol table.
-var C128 = [
-  [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2], //  0- 4
-  [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3], //  5- 9
-  [2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1], // 10-14
-  [1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2], // 15-19
-  [2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2], // 20-24
-  [3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1], // 25-29
-  [2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3], // 30-34
-  [1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3], // 35-39
-  [2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1], // 40-44
-  [1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1], // 45-49
-  [2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1], // 50-54
-  [2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2], // 55-59
-  [2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1], // 60-64
-  [1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2], // 65-69
-  [1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1], // 70-74
-  [2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1], // 75-79
-  [4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1], // 80-84
-  [4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4], // 85-89
-  [2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2], // 90-94
-  [1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1], // 95-99
-  [1,1,1,1,4,1],[1,1,4,1,1,1],[1,4,1,1,1,1]                               // 100-102
-];
-// Special symbols outside the 0-102 data range — defined as named constants.
-var C128_START_C   = [2,1,1,4,1,2]; // symbol 105
-var C128_FNC1      = [1,1,1,1,4,1]; // symbol 102 (same value as C128[102] but explicit)
-var C128_STOP      = [2,3,3,1,1,1,2]; // stop pattern (13-unit, trailing 2-module bar)
-
-// ── GS1-128 encoder ───────────────────────────────────────────────────────────
-function getGS1128BarcodeData(sscc){
-  var digits=sscc.replace(/\D/g,'');
-  if(digits.length%2!==0)digits='0'+digits;
-
-  // Checksum = (105 + 102×1 + Σ pair_value×position) mod 103
-  // position starts at 2 for first data pair (FNC1 occupies position 1)
-  var chk=105+102, pos=2, pairs=[];
-  for(var i=0;i<digits.length;i+=2){
-    var v=parseInt(digits.substring(i,i+2));
-    pairs.push(v); chk+=v*pos; pos++;
+function renderBarcodeToCanvas(value, format, widthMM, heightMM){
+  // Convert mm to px at 96dpi for canvas (jsPDF will scale back to mm)
+  var PX_PER_MM = 96/25.4;
+  var canvas = document.createElement('canvas');
+  try{
+    JsBarcode(canvas, value, {
+      format: format,        // 'CODE128' for GS1-128, 'ITF14' for TUC
+      width: 2,              // module width in px (JsBarcode scales internally)
+      height: Math.round(heightMM * PX_PER_MM),
+      displayValue: false,   // we add human-readable text ourselves
+      margin: 0,
+      background: '#ffffff',
+      lineColor: '#000000'
+    });
+  }catch(e){
+    console.error('JsBarcode error for value "'+value+'" format "'+format+'":', e);
+    return null;
   }
-  chk=chk%103;
-
-  // Assemble bars
-  var bars=[];
-  function emit(pat){pat.forEach(function(b){bars.push(b);});}
-  emit(C128_START_C);
-  emit(C128_FNC1);
-  pairs.forEach(function(v){
-    var p=C128[v];
-    if(p)emit(p);
-    else console.error('GS1-128: no pattern for pair value',v);
-  });
-  // Check symbol — value 102 means FNC1 pattern
-  emit(chk===102 ? C128_FNC1 : (C128[chk]||[]));
-  emit(C128_STOP);
-  return bars;
+  return canvas;
 }
 
-// ── GS1-128 draw ─────────────────────────────────────────────────────────────
-// bars = flat array of module-widths, alternating bar/space starting with bar.
-// Quiet zone of 10 modules min is built into the padding passed by the caller.
-function drawBarcode128(doc, bars, centerX, startY, totalWidthMM, heightMM){
-  var totalUnits=bars.reduce(function(a,b){return a+b;},0);
-  var quietMM=3; // 3 mm quiet zone each side
-  var unitW=(totalWidthMM-quietMM*2)/totalUnits;
-  var x=centerX-totalWidthMM/2+quietMM;
+function addBarcodeToDoc(doc, value, format, centerX, startY, totalWidthMM, heightMM){
+  var canvas = renderBarcodeToCanvas(value, format, totalWidthMM, heightMM);
+  if(!canvas){ console.error('Barcode canvas null for', value); return; }
+  var imgData = canvas.toDataURL('image/png');
+  var x = centerX - totalWidthMM/2;
+  // White background behind barcode area
   doc.setFillColor(255,255,255);
-  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM,'F');
-  bars.forEach(function(b,i){
-    if(i%2===0){doc.setFillColor(0,0,0);doc.rect(x,startY,b*unitW,heightMM,'F');}
-    x+=b*unitW;
-  });
-}
-
-// ── ITF-14 encoder ────────────────────────────────────────────────────────────
-// Interleaved 2-of-5: pairs of digits interleaved (odd=bars, even=spaces).
-// N=narrow (1 unit), W=wide (2.5 units — we use 2 for compact PDF output).
-var ITF=[
-  [1,1,2,2,1],[2,1,1,1,2],[1,2,1,1,2],[2,2,1,1,1],[1,1,2,1,2],
-  [2,1,2,1,1],[1,2,2,1,1],[1,1,1,2,2],[2,1,1,2,1],[1,2,1,2,1]
-];
-function getITF14BarcodeData(tuc){
-  var d=tuc.replace(/\D/g,'');
-  while(d.length<14)d='0'+d; d=d.substring(0,14);
-  var els=[];
-  // Start: narrow bar, narrow space
-  els.push({w:1,bar:true},{w:1,bar:false});
-  for(var i=0;i<14;i+=2){
-    var p1=ITF[parseInt(d[i])],p2=ITF[parseInt(d[i+1])];
-    for(var j=0;j<5;j++){els.push({w:p1[j],bar:true});els.push({w:p2[j],bar:false});}
-  }
-  // Stop: wide bar, narrow space, narrow bar
-  els.push({w:2,bar:true},{w:1,bar:false},{w:1,bar:true});
-  return els;
-}
-
-// ── ITF-14 draw ───────────────────────────────────────────────────────────────
-function drawITF14(doc, els, centerX, startY, totalWidthMM, heightMM){
-  var totalUnits=els.reduce(function(a,e){return a+e.w;},0);
-  var quietMM=3, bearerH=1.0;
-  var unitW=(totalWidthMM-quietMM*2)/totalUnits;
-  // White background
-  doc.setFillColor(255,255,255);
-  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM+bearerH*2,'F');
-  // Bearer bars
-  doc.setFillColor(0,0,0);
-  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,bearerH,'F');
-  doc.rect(centerX-totalWidthMM/2,startY+bearerH+heightMM,totalWidthMM,bearerH,'F');
-  // Bars
-  var x=centerX-totalWidthMM/2+quietMM;
-  els.forEach(function(e){
-    if(e.bar){doc.setFillColor(0,0,0);doc.rect(x,startY+bearerH,e.w*unitW,heightMM,'F');}
-    x+=e.w*unitW;
-  });
+  doc.rect(x, startY, totalWidthMM, heightMM, 'F');
+  doc.addImage(imgData, 'PNG', x, startY, totalWidthMM, heightMM);
 }
 </script>
 </body>
