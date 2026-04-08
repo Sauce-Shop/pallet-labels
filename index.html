@@ -127,7 +127,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.6</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -381,14 +381,14 @@ const CONFIG = {
   tryNext();
 })();
 </script>
-<!-- jsPDF for PDF generation -->
+<!-- jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
 var msalApp=null, currentAccount=null;
 var allRecords=[], queue=[], selectedIds=new Set();
-var products={}; // keyed by SKU
+var products={};
 var cfg={prefix:'5012345',ext:3};
 var serialRef=1;
 var siteId=null, labelsListId=null, counterListId=null, counterItemId=null, productsListId=null, verificationsListId=null;
@@ -540,7 +540,6 @@ function onSKUChange(){
     'Cases/pallet (default): <strong>'+p.casesOnPallet+'</strong><br>'+
     'TUC: <strong>'+p.tuc+'</strong><br>'+
     'Info: <strong>'+p.info+'</strong>';
-  // prefill cases
   document.getElementById('f-cases').placeholder='Default: '+p.casesOnPallet;
 }
 
@@ -676,13 +675,13 @@ function validate(d){
   return true;
 }
 async function makeRecord(data){
-  var generatedBy = currentAccount ? (currentAccount.name || currentAccount.username || '') : '';
+  var generatedBy=currentAccount?(currentAccount.name||currentAccount.username||''):'';
   return Object.assign({
     id:Date.now()+'-'+Math.random().toString(36).substr(2,5),
     sscc:await nextSSCC(),
     ts:new Date().toISOString(),
     generatedBy:generatedBy
-  }, data);
+  },data);
 }
 function setBusy(on){['btn-gp','btn-aq'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=on;});}
 
@@ -691,22 +690,22 @@ async function generateAndPrint(){
   if(!validate(d))return;
   var numPallets=d.numPallets||1;
   setBusy(true);
-  try {
+  try{
     var recs=[];
     for(var i=0;i<numPallets;i++){
       var rec=await makeRecord(d);
-      rec.palletNumber = i+1;
-      rec.batchTotal = numPallets;
-      rec.status = 'Produced';
+      rec.palletNumber=i+1;
+      rec.batchTotal=numPallets;
+      rec.status='Produced';
       await saveRecord(rec);
       recs.push(rec);
     }
     clearForm();
     doPrint(recs);
     toast('Generated '+numPallets+' label'+(numPallets>1?'s':'')+' — PDF downloading');
-  } catch(err) {
-    console.error('generateAndPrint error:', err);
-    toast('Error: '+err.message, true);
+  }catch(err){
+    console.error('generateAndPrint error:',err);
+    toast('Error: '+err.message,true);
     alert('Error: '+err.message);
   }
   setBusy(false);
@@ -718,9 +717,9 @@ async function addToQueue(){
   setBusy(true);
   for(var i=0;i<numPallets;i++){
     var rec=await makeRecord(d);
-    rec.palletNumber = i+1;
-    rec.batchTotal = numPallets;
-    rec.status = 'Produced';
+    rec.palletNumber=i+1;
+    rec.batchTotal=numPallets;
+    rec.status='Produced';
     await saveRecord(rec);
     queue.push(rec);
   }
@@ -761,26 +760,25 @@ function renderHistory(){
     }
     return true;
   });
-  // Sort: newest date first, then by palletNumber ascending within same batch
   filtered.sort(function(a,b){
-    var dateDiff = new Date(b.ts).setSeconds(0,0) - new Date(a.ts).setSeconds(0,0);
-    if(dateDiff !== 0) return dateDiff;
-    return (a.palletNumber||0) - (b.palletNumber||0);
+    var dateDiff=new Date(b.ts).setSeconds(0,0)-new Date(a.ts).setSeconds(0,0);
+    if(dateDiff!==0)return dateDiff;
+    return(a.palletNumber||0)-(b.palletNumber||0);
   });
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
   var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Pallet #</th><th>Cases</th><th>Status</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
     html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
-    var palletDisp = r.palletNumber ? String(r.palletNumber) : '—';
-    var isDNP = r.status === 'Did Not Produce';
-    var statusBadge = isDNP
-      ? '<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
-      : '<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
-    var rowStyle = isDNP ? ' style="opacity:.6;text-decoration:line-through"' : '';
-    var truncName = r.name.length>22 ? r.name.substring(0,22)+'…' : r.name;
+    var palletDisp=r.palletNumber?String(r.palletNumber):'—';
+    var isDNP=r.status==='Did Not Produce';
+    var statusBadge=isDNP
+      ?'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
+      :'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
+    var rowStyle=isDNP?' style="opacity:.6;text-decoration:line-through"':'';
+    var truncName=r.name.length>22?r.name.substring(0,22)+'…':r.name;
     html+='<td'+rowStyle+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rowStyle+'>'+fmtSSCC(r.sscc)+'</td><td'+rowStyle+'><strong>'+r.sku+'</strong></td><td'+rowStyle+' title="'+r.name+'">'+truncName+'</td><td'+rowStyle+'>'+(r.batch||'—')+'</td><td'+rowStyle+'>'+fmtBBE(r.bbe)+'</td><td'+rowStyle+'>'+palletDisp+'</td><td'+rowStyle+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rowStyle+'>'+(r.generatedBy||'')+'</td>';
-    var btns = '<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
-    if(!isDNP) btns += ' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
+    var btns='<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
+    if(!isDNP)btns+=' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
     html+='<td style="white-space:nowrap">'+btns+'</td></tr>';
   });
   body.innerHTML=html+'</tbody></table>';
@@ -789,20 +787,16 @@ function toggleAll(cb){document.querySelectorAll('#history-body tbody input[type
 function toggleSel(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);}
 function reprintById(id){var r=allRecords.find(function(x){return x.id===id;});if(r)doPrint([r]);}
 function reprintSelected(){var recs=allRecords.filter(function(r){return selectedIds.has(r.id);});if(!recs.length){alert('Select records to reprint');return;}doPrint(recs);toast('Reprinting '+recs.length+' label(s)');}
-async function markDNP(id, spId){
-  if(!confirm('Mark this pallet as "Did Not Produce"? This cannot be undone.')) return;
-  // Update local record
-  var rec = allRecords.find(function(r){ return r.id===id; });
-  if(rec) rec.status = 'Did Not Produce';
+async function markDNP(id,spId){
+  if(!confirm('Mark this pallet as "Did Not Produce"? This cannot be undone.'))return;
+  var rec=allRecords.find(function(r){return r.id===id;});
+  if(rec)rec.status='Did Not Produce';
   renderHistory();
-  // Update SharePoint
-  if(!spId || !labelsListId){ toast('Could not update SharePoint — spId missing', true); return; }
+  if(!spId||!labelsListId){toast('Could not update SharePoint — spId missing',true);return;}
   try{
-    await graph('PATCH', '/sites/'+siteId+'/lists/'+labelsListId+'/items/'+spId+'/fields', { Status: 'Did Not Produce' });
+    await graph('PATCH','/sites/'+siteId+'/lists/'+labelsListId+'/items/'+spId+'/fields',{Status:'Did Not Produce'});
     toast('Marked as Did Not Produce');
-  }catch(e){
-    toast('SharePoint update failed: '+e.message, true);
-  }
+  }catch(e){toast('SharePoint update failed: '+e.message,true);}
 }
 
 function updateStats(){var today=new Date().toDateString();document.getElementById('stat-total').textContent=allRecords.length;document.getElementById('stat-today').textContent=allRecords.filter(function(r){return new Date(r.ts).toDateString()===today;}).length;document.getElementById('stat-serial').textContent=serialRef-1;}
@@ -815,7 +809,6 @@ function exportCSV(){
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function fmtBBE(bbe){
-  // bbe is YYYY-MM from month input
   if(!bbe)return'—';
   var p=bbe.split('-');
   if(p.length<2)return bbe;
@@ -833,500 +826,435 @@ function showPage(p){
 function updateSettingsForm(){document.getElementById('s-prefix').value=cfg.prefix;document.getElementById('s-ext').value=cfg.ext;}
 function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},isErr?5000:2500);}
 
+// ── PDF / Print ───────────────────────────────────────────────────────────────
 function doPrint(recs){
-  // Debug — confirm function is being called
-  console.log('doPrint called with', recs.length, 'records');
-  console.log('jspdf available:', typeof window.jspdf);
-  console.log('records:', JSON.stringify(recs));
-
+  console.log('doPrint called with',recs.length,'records');
   if(!window.jspdf){
-    toast('PDF library not loaded — check your internet connection and reload the page', true);
-    alert('PDF library (jsPDF) failed to load. Please refresh the page and try again. If this keeps happening, your network may be blocking cdn.jsdelivr.net');
+    toast('PDF library not loaded — check your internet connection and reload the page',true);
+    alert('PDF library (jsPDF) failed to load. Please refresh the page and try again.');
     return;
   }
+  try{
+    var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
 
-  try {
+    recs.forEach(function(r,pageIndex){
+      if(pageIndex>0)doc.addPage('a5','portrait');
 
-  // Generate PDF using jsPDF
-  var doc = new window.jspdf.jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a5'
-  });
+      var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'-';
+      var casesDisp=r.cases||'-';
+      var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'-';
+      var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
+      var bbeDisp=fmtBBE(r.bbe);
+      var W=148;
+      var y=0;
 
-  recs.forEach(function(r, pageIndex){
-    if(pageIndex > 0) doc.addPage('a5','portrait');
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.rect(0,y,W,18,'S');
+      doc.setTextColor(0,0,0);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text('SAUCE SHOP PALLET LABEL',W/2,y+7,{align:'center'});
+      doc.setFontSize(7);
+      doc.setFont('helvetica','normal');
+      doc.text('Sauce Shop Address: Unit 2/3 Centurion Way, Nottingham, NG2 1RW',W/2,y+13,{align:'center'});
+      y+=18;
 
-    var totalWeight = r.cases && r.caseWeight ? (parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG' : '-';
-    var casesDisp = r.cases || '-';
-    var caseWeightDisp = r.caseWeight ? r.caseWeight+' KG' : '-';
-    var ssccFull = '(00)'+r.sscc+'(37)'+r.cases;
-    var bbeDisp = fmtBBE(r.bbe);
+      function divider(yy){doc.setDrawColor(0);doc.line(0,yy,W,yy);}
+      function lbl(txt,x,yy){doc.setTextColor(100,100,100);doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(txt.toUpperCase(),x,yy);}
+      function val(txt,x,yy,size){doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(size||9);doc.text(String(txt||'-'),x,yy);}
 
-    var W = 148; // A5 width mm
-    var y = 0;
-
-    // Header — white background, black text
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.5);
-    doc.rect(0, y, W, 18, 'S');
-    doc.setTextColor(0,0,0);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(12);
-    doc.text('SAUCE SHOP PALLET LABEL', W/2, y+7, {align:'center'});
-    doc.setFontSize(7);
-    doc.setFont('helvetica','normal');
-    doc.text('Sauce Shop Address: Unit 2/3 Centurion Way, Nottingham, NG2 1RW', W/2, y+13, {align:'center'});
-    y += 18;
-
-    // Helper to draw a section divider line
-    function divider(yy){ doc.setDrawColor(0); doc.line(0, yy, W, yy); }
-    function label(txt, x, yy){ doc.setTextColor(100,100,100); doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.text(txt.toUpperCase(), x, yy); }
-    function value(txt, x, yy, size){ doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(size||9); doc.text(String(txt||'-'), x, yy); }
-
-    // Row: Name + SKU + Pallet number
-    divider(y);
-    label('Name', 4, y+5);
-    value(r.name, 4, y+10);
-    label('SKU', W/2+2, y+5);
-    value(r.sku, W/2+2, y+10);
-    if(r.palletNumber){
-      label('Production Number', W*3/4+2, y+5);
-      value(String(r.palletNumber), W*3/4+2, y+10, 9);
-    }
-    y += 15;
-
-    // Row: Units/case, Cases on pallet, Case weight, Total weight
-    divider(y);
-    var cols = [4, W/4+2, W/2+2, W*3/4+2];
-    label('Units per Case', cols[0], y+4);
-    value((r.unitsPerCase||'-'), cols[0], y+9);
-    label('Cases on Pallet', cols[1], y+4);
-    value(casesDisp, cols[1], y+9);
-    label('Case Weight', cols[2], y+4);
-    value(caseWeightDisp, cols[2], y+9);
-    label('Total Weight', cols[3], y+4);
-    value(totalWeight, cols[3], y+9);
-    y += 14;
-
-    // Row: Information
-    divider(y);
-    label('Information', 4, y+4);
-    doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(7);
-    doc.text(String(r.info||'-'), 4, y+9, {maxWidth: W-8});
-    y += 14;
-
-    // Row: Batch + TUC
-    divider(y);
-    label('Batch', 4, y+4);
-    value(r.batch, 4, y+9);
-    label('TUC', W/2+2, y+4);
-    value(r.tuc||'-', W/2+2, y+9);
-    y += 14;
-
-    // TUC barcode (small) with TUC number underneath
-    if(r.tuc){
+      // Row: Name + SKU + Pallet number
       divider(y);
-      var tucBarcode = getBarcodeData(r.tuc);
-      drawBarcode(doc, tucBarcode, W/2, y+2, 90, 8, true);
-      doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(7);
-      doc.text('TUC: '+r.tuc, W/2, y+12, {align:'center'});
-      y += 16;
-    }
+      lbl('Name',4,y+5); val(r.name,4,y+10);
+      lbl('SKU',W/2+2,y+5); val(r.sku,W/2+2,y+10);
+      if(r.palletNumber){lbl('Production Number',W*3/4+2,y+5);val(String(r.palletNumber),W*3/4+2,y+10,9);}
+      y+=15;
 
-    // SKU + BBE large
-    divider(y);
-    doc.setFillColor(255,255,255);
-    label('SKU:', 4, y+5);
-    doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(26);
-    doc.text(r.sku, 16, y+18);
-    label('BBE:', W/2+2, y+5);
-    doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(26);
-    doc.text(bbeDisp, W/2+14, y+18);
-    y += 24;
+      // Row: Units/case, Cases, Case weight, Total weight
+      divider(y);
+      var cols=[4,W/4+2,W/2+2,W*3/4+2];
+      lbl('Units per Case',cols[0],y+4); val(r.unitsPerCase||'-',cols[0],y+9);
+      lbl('Cases on Pallet',cols[1],y+4); val(casesDisp,cols[1],y+9);
+      lbl('Case Weight',cols[2],y+4); val(caseWeightDisp,cols[2],y+9);
+      lbl('Total Weight',cols[3],y+4); val(totalWeight,cols[3],y+9);
+      y+=14;
 
-    // SSCC barcode (large, bottom)
-    divider(y);
-    var ssccBarcode = getBarcodeData(r.sscc);
-    drawBarcode(doc, ssccBarcode, W/2, y+2, 120, 20, true);
-    y += 26;
+      // Row: Information
+      divider(y);
+      lbl('Information',4,y+4);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
+      doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-8});
+      y+=14;
 
-    // SSCC text
-    doc.setTextColor(0,0,0); doc.setFont('courier','bold'); doc.setFontSize(8);
-    doc.text(ssccFull, W/2, y+4, {align:'center'});
-    y += 8;
+      // Row: Batch + TUC
+      divider(y);
+      lbl('Batch',4,y+4); val(r.batch,4,y+9);
+      lbl('TUC',W/2+2,y+4); val(r.tuc||'-',W/2+2,y+9);
+      y+=14;
 
-    // Footer
-    divider(y);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
-    var generatedByText = r.generatedBy || (currentAccount?(currentAccount.name||currentAccount.username):'');
-    var footerText='Generated: '+fmtDate(r.ts)+'   By: '+generatedByText;
-    doc.text(footerText, W/2, y+4, {align:'center', maxWidth: W-8});
-  });
+      // TUC barcode — ITF-14
+      if(r.tuc){
+        divider(y);
+        var tucData=getITF14BarcodeData(r.tuc);
+        drawITF14(doc,tucData,W/2,y+2,90,8);
+        doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
+        doc.text('TUC: '+r.tuc,W/2,y+13,{align:'center'});
+        y+=17;
+      }
 
-  // Save
-  var now = new Date();
-  var dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  var timeStr = String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
-  var skuStr = recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
-  var filename = 'pallet-label-'+dateStr+'-'+timeStr+'-'+skuStr+(recs.length>1?'-x'+recs.length:'')+'.pdf';
-  doc.save(filename);
-  toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
+      // SKU + BBE large
+      divider(y);
+      lbl('SKU:',4,y+5);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);
+      doc.text(r.sku,16,y+18);
+      lbl('BBE:',W/2+2,y+5);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);
+      doc.text(bbeDisp,W/2+14,y+18);
+      y+=24;
 
-  } catch(err) {
-    console.error('PDF generation error:', err);
-    toast('PDF error: '+err.message, true);
+      // SSCC barcode — GS1-128
+      divider(y);
+      var ssccData=getGS1128BarcodeData(r.sscc);
+      drawBarcode(doc,ssccData,W/2,y+2,120,20,true);
+      y+=26;
+
+      // SSCC text
+      doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
+      doc.text(ssccFull,W/2,y+4,{align:'center'});
+      y+=8;
+
+      // Footer
+      divider(y);
+      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);
+      var generatedByText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
+      doc.text('Generated: '+fmtDate(r.ts)+'   By: '+generatedByText,W/2,y+4,{align:'center',maxWidth:W-8});
+    });
+
+    var now=new Date();
+    var dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var timeStr=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+    var skuStr=recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
+    var filename='pallet-label-'+dateStr+'-'+timeStr+'-'+skuStr+(recs.length>1?'-x'+recs.length:'')+'.pdf';
+    doc.save(filename);
+    toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
+  }catch(err){
+    console.error('PDF generation error:',err);
+    toast('PDF error: '+err.message,true);
     alert('PDF generation failed: '+err.message+'\n\nCheck the browser console (F12) for details.');
   }
 }
 
-// ── Verify functions ─────────────────────────────────────────────────────────
-var verifyLogs = [];
-var vState = { sku:'', tucPass:null, eanPass:null, bbePass:null, tucScanned:'', eanScanned:'', bbeTyped:'', expectedBBE:'' };
+// ── Verify ────────────────────────────────────────────────────────────────────
+var verifyLogs=[];
+var vState={sku:'',tucPass:null,eanPass:null,bbePass:null,tucScanned:'',eanScanned:'',bbeTyped:'',expectedBBE:''};
 
 function populateVerifySKU(){
-  var sel = document.getElementById('v-sku');
-  var current = sel.value;
-  sel.innerHTML = '<option value="">— select a product —</option>';
+  var sel=document.getElementById('v-sku');
+  var current=sel.value;
+  sel.innerHTML='<option value="">— select a product —</option>';
   Object.keys(products).sort().forEach(function(sku){
-    var opt = document.createElement('option');
-    opt.value = sku;
-    opt.textContent = sku + ' — ' + products[sku].name;
+    var opt=document.createElement('option');
+    opt.value=sku;
+    opt.textContent=sku+' — '+products[sku].name;
     sel.appendChild(opt);
   });
-  if(current) sel.value = current;
+  if(current)sel.value=current;
 }
 
 function calcExpectedBBE(shelfLifeMonths){
-  // Add shelfLifeMonths to today, go to end of that month
-  var d = new Date();
-  d.setMonth(d.getMonth() + parseInt(shelfLifeMonths));
-  // End of that month = day 0 of next month
-  var endOfMonth = new Date(d.getFullYear(), d.getMonth()+1, 0);
-  var mm = String(endOfMonth.getMonth()+1).padStart(2,'0');
-  var yyyy = endOfMonth.getFullYear();
-  return mm+'/'+yyyy; // e.g. "09/2027"
+  var d=new Date();
+  d.setMonth(d.getMonth()+parseInt(shelfLifeMonths));
+  var endOfMonth=new Date(d.getFullYear(),d.getMonth()+1,0);
+  var mm=String(endOfMonth.getMonth()+1).padStart(2,'0');
+  var yyyy=endOfMonth.getFullYear();
+  return mm+'/'+yyyy;
 }
 
-function onVerifySKUChange(){
-  updateVerifyInfo();
-}
+function onVerifySKUChange(){updateVerifyInfo();}
 
 function onBBEInput(el){
-  // Auto-format: insert / after 2 digits
-  var v = el.value.replace(/\D/g,'');
-  if(v.length > 2) v = v.substring(0,2)+'/'+v.substring(2,6);
-  el.value = v;
+  var v=el.value.replace(/\D/g,'');
+  if(v.length>2)v=v.substring(0,2)+'/'+v.substring(2,6);
+  el.value=v;
   updateVerifyInfo();
 }
 
 function updateVerifyInfo(){
-  var sku = document.getElementById('v-sku').value;
-  var bbeTyped = document.getElementById('v-bbe-typed').value.trim();
-  var p = products[sku];
-  var infoEl = document.getElementById('v-product-info');
-  var startBtn = document.getElementById('v-start-btn');
-  document.getElementById('v-result').style.display = 'none';
-
-  if(!p || !sku){ infoEl.style.display='none'; startBtn.style.display='none'; return; }
-
-  var shelfLife = p.shelfLifeMonths || '';
-  var expectedBBE = shelfLife ? calcExpectedBBE(shelfLife) : 'Not set';
-  vState.expectedBBE = expectedBBE;
-
-  document.getElementById('v-product-preview').innerHTML =
+  var sku=document.getElementById('v-sku').value;
+  var bbeTyped=document.getElementById('v-bbe-typed').value.trim();
+  var p=products[sku];
+  var infoEl=document.getElementById('v-product-info');
+  var startBtn=document.getElementById('v-start-btn');
+  document.getElementById('v-result').style.display='none';
+  if(!p||!sku){infoEl.style.display='none';startBtn.style.display='none';return;}
+  var shelfLife=p.shelfLifeMonths||'';
+  var expectedBBE=shelfLife?calcExpectedBBE(shelfLife):'Not set';
+  vState.expectedBBE=expectedBBE;
+  document.getElementById('v-product-preview').innerHTML=
     '<strong>'+p.name+'</strong> &nbsp;·&nbsp; SKU: <strong>'+sku+'</strong><br>'+
     'TUC: <strong class="mono">'+(p.tuc||'Not set')+'</strong> &nbsp;·&nbsp; '+
     'EAN-13: <strong class="mono">'+(p.ean13||'Not set')+'</strong>';
-  document.getElementById('v-expected-bbe').textContent = expectedBBE;
-  document.getElementById('v-shelf-life').textContent = shelfLife ? shelfLife+' months' : 'Not set';
-
-  // BBE check
-  var bbeCheckEl = document.getElementById('v-bbe-check');
-  if(bbeTyped.length === 7){
-    var bbeMatch = bbeTyped === expectedBBE;
-    bbeCheckEl.textContent = bbeMatch ? '✓ Correct' : '✗ Mismatch';
-    bbeCheckEl.style.color = bbeMatch ? '#155724' : '#c0392b';
-    vState.bbePass = bbeMatch;
-    vState.bbeTyped = bbeTyped;
-  } else {
-    bbeCheckEl.textContent = '—';
-    bbeCheckEl.style.color = '#888';
-    vState.bbePass = null;
+  document.getElementById('v-expected-bbe').textContent=expectedBBE;
+  document.getElementById('v-shelf-life').textContent=shelfLife?shelfLife+' months':'Not set';
+  var bbeCheckEl=document.getElementById('v-bbe-check');
+  if(bbeTyped.length===7){
+    var bbeMatch=bbeTyped===expectedBBE;
+    bbeCheckEl.textContent=bbeMatch?'✓ Correct':'✗ Mismatch';
+    bbeCheckEl.style.color=bbeMatch?'#155724':'#c0392b';
+    vState.bbePass=bbeMatch;
+    vState.bbeTyped=bbeTyped;
+  }else{
+    bbeCheckEl.textContent='—';
+    bbeCheckEl.style.color='#888';
+    vState.bbePass=null;
   }
-
-  infoEl.style.display = '';
-  // Show start button only when BBE is fully entered
-  startBtn.style.display = (bbeTyped.length === 7) ? '' : 'none';
+  infoEl.style.display='';
+  startBtn.style.display=(bbeTyped.length===7)?'':'none';
 }
 
 function startScanning(){
-  var sku = document.getElementById('v-sku').value;
-  var p = products[sku];
-  if(!p) return;
-  vState.sku = sku;
-  vState.tucScanned = '';
-  vState.eanScanned = '';
-  vState.tucPass = null;
-  vState.eanPass = null;
-
-  document.getElementById('v-step1').style.display = 'none';
-  document.getElementById('v-step2').style.display = '';
-  document.getElementById('v-step3').style.display = 'none';
-  document.getElementById('v-result').style.display = 'none';
-
-  document.getElementById('v-tuc-expected-disp').textContent = p.tuc || 'Not set';
-  document.getElementById('v-ean-expected-disp').textContent = p.ean13 || 'Not set';
-
-  document.getElementById('v-tuc-input').value = '';
-  setTimeout(function(){ document.getElementById('v-tuc-input').focus(); }, 100);
+  var sku=document.getElementById('v-sku').value;
+  var p=products[sku];
+  if(!p)return;
+  vState.sku=sku;vState.tucScanned='';vState.eanScanned='';vState.tucPass=null;vState.eanPass=null;
+  document.getElementById('v-step1').style.display='none';
+  document.getElementById('v-step2').style.display='';
+  document.getElementById('v-step3').style.display='none';
+  document.getElementById('v-result').style.display='none';
+  document.getElementById('v-tuc-expected-disp').textContent=p.tuc||'Not set';
+  document.getElementById('v-ean-expected-disp').textContent=p.ean13||'Not set';
+  document.getElementById('v-tuc-input').value='';
+  setTimeout(function(){document.getElementById('v-tuc-input').focus();},100);
 }
 
 function onTUCScanInput(){
-  var inp = document.getElementById('v-tuc-input');
+  var inp=document.getElementById('v-tuc-input');
   clearTimeout(inp._t);
-  inp._t = setTimeout(function(){ if(inp.value.length > 4) processTUCScan(); }, 300);
+  inp._t=setTimeout(function(){if(inp.value.length>4)processTUCScan();},300);
 }
 
 function processTUCScan(){
-  var sku = vState.sku;
-  var p = products[sku];
-  if(!p) return;
-  var scanned = document.getElementById('v-tuc-input').value.trim().replace(/\D/g,'');
-  if(!scanned) return;
-  var expected = String(p.tuc||'').replace(/\D/g,'');
-  vState.tucScanned = scanned;
-  vState.tucPass = (scanned === expected);
-  document.getElementById('v-tuc-input').value = '';
-  // Move to EAN step
-  document.getElementById('v-step2').style.display = 'none';
-  document.getElementById('v-step3').style.display = '';
-  setTimeout(function(){ document.getElementById('v-ean-input').focus(); }, 100);
+  var sku=vState.sku;var p=products[sku];if(!p)return;
+  var scanned=document.getElementById('v-tuc-input').value.trim().replace(/\D/g,'');
+  if(!scanned)return;
+  var expected=String(p.tuc||'').replace(/\D/g,'');
+  vState.tucScanned=scanned;vState.tucPass=(scanned===expected);
+  document.getElementById('v-tuc-input').value='';
+  document.getElementById('v-step2').style.display='none';
+  document.getElementById('v-step3').style.display='';
+  setTimeout(function(){document.getElementById('v-ean-input').focus();},100);
 }
 
 function onEANScanInput(){
-  var inp = document.getElementById('v-ean-input');
+  var inp=document.getElementById('v-ean-input');
   clearTimeout(inp._t);
-  inp._t = setTimeout(function(){ if(inp.value.length > 4) processEANScan(); }, 300);
+  inp._t=setTimeout(function(){if(inp.value.length>4)processEANScan();},300);
 }
 
 function processEANScan(){
-  var sku = vState.sku;
-  var p = products[sku];
-  if(!p) return;
-  var scanned = document.getElementById('v-ean-input').value.trim().replace(/\D/g,'');
-  if(!scanned) return;
-  var expected = String(p.ean13||'').replace(/\D/g,'');
-  vState.eanScanned = scanned;
-  vState.eanPass = (scanned === expected);
-  document.getElementById('v-ean-input').value = '';
-  // All done — show result
+  var sku=vState.sku;var p=products[sku];if(!p)return;
+  var scanned=document.getElementById('v-ean-input').value.trim().replace(/\D/g,'');
+  if(!scanned)return;
+  var expected=String(p.ean13||'').replace(/\D/g,'');
+  vState.eanScanned=scanned;vState.eanPass=(scanned===expected);
+  document.getElementById('v-ean-input').value='';
   showVerifyResult();
 }
 
 function showVerifyResult(){
-  var sku = vState.sku;
-  var p = products[sku];
-  var allPass = vState.bbePass && vState.tucPass && vState.eanPass;
-
-  document.getElementById('v-step2').style.display = 'none';
-  document.getElementById('v-step3').style.display = 'none';
-
-  var resultEl = document.getElementById('v-result');
-  resultEl.style.display = '';
-  resultEl.style.background = allPass ? '#d4edda' : '#f8d7da';
-  resultEl.style.border = '2px solid '+(allPass ? '#28a745' : '#dc3545');
-
-  var iconEl = document.getElementById('v-result-icon');
-  iconEl.textContent = allPass ? '✓' : '✗';
-  iconEl.style.color = allPass ? '#28a745' : '#dc3545';
-
-  var titleEl = document.getElementById('v-result-title');
-  titleEl.textContent = allPass ? 'ALL CHECKS PASSED' : 'VERIFICATION FAILED';
-  titleEl.style.color = allPass ? '#155724' : '#721c24';
-
-  function checkRow(label, pass, scanned, expected){
-    var icon = pass ? '✓' : '✗';
-    var col = pass ? '#155724' : '#c0392b';
-    var row = '<div style="color:'+col+'"><strong>'+icon+' '+label+'</strong>';
-    if(!pass) row += ' — Scanned: <span class="mono">'+scanned+'</span> | Expected: <span class="mono">'+expected+'</span>';
-    row += '</div>';
-    return row;
+  var sku=vState.sku;var p=products[sku];
+  var allPass=vState.bbePass&&vState.tucPass&&vState.eanPass;
+  document.getElementById('v-step2').style.display='none';
+  document.getElementById('v-step3').style.display='none';
+  var resultEl=document.getElementById('v-result');
+  resultEl.style.display='';
+  resultEl.style.background=allPass?'#d4edda':'#f8d7da';
+  resultEl.style.border='2px solid '+(allPass?'#28a745':'#dc3545');
+  document.getElementById('v-result-icon').textContent=allPass?'✓':'✗';
+  document.getElementById('v-result-icon').style.color=allPass?'#28a745':'#dc3545';
+  document.getElementById('v-result-title').textContent=allPass?'ALL CHECKS PASSED':'VERIFICATION FAILED';
+  document.getElementById('v-result-title').style.color=allPass?'#155724':'#721c24';
+  function checkRow(label,pass,scanned,expected){
+    var icon=pass?'✓':'✗';var col=pass?'#155724':'#c0392b';
+    var row='<div style="color:'+col+'"><strong>'+icon+' '+label+'</strong>';
+    if(!pass)row+=' — Scanned: <span class="mono">'+scanned+'</span> | Expected: <span class="mono">'+expected+'</span>';
+    row+='</div>';return row;
   }
-
-  var detail = checkRow('BBE', vState.bbePass, vState.bbeTyped, vState.expectedBBE);
-  detail += checkRow('Case label (TUC)', vState.tucPass, vState.tucScanned, String(p.tuc||'').replace(/\D/g,''));
-  detail += checkRow('Bottle label (EAN-13)', vState.eanPass, vState.eanScanned, String(p.ean13||'').replace(/\D/g,''));
-
-  document.getElementById('v-result-detail').innerHTML = detail;
+  var detail=checkRow('BBE',vState.bbePass,vState.bbeTyped,vState.expectedBBE);
+  detail+=checkRow('Case label (TUC)',vState.tucPass,vState.tucScanned,String(p.tuc||'').replace(/\D/g,''));
+  detail+=checkRow('Bottle label (EAN-13)',vState.eanPass,vState.eanScanned,String(p.ean13||'').replace(/\D/g,''));
+  document.getElementById('v-result-detail').innerHTML=detail;
   playBeep(allPass);
-
-  // Save to SharePoint
-  saveVerification(sku, p, allPass);
-
-  if(allPass){
-    clearTimeout(resultEl._t);
-    resultEl._t = setTimeout(function(){ resetVerify(); }, 5000);
-  }
+  saveVerification(sku,p,allPass);
+  if(allPass){clearTimeout(resultEl._t);resultEl._t=setTimeout(function(){resetVerify();},5000);}
 }
 
 function playBeep(pass){
   try{
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = pass ? 880 : 220;
-    osc.type = pass ? 'sine' : 'sawtooth';
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+(pass?0.4:0.6));
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime+(pass?0.4:0.6));
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var osc=ctx.createOscillator();var gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.value=pass?880:220;osc.type=pass?'sine':'sawtooth';
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(pass?0.4:0.6));
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+(pass?0.4:0.6));
   }catch(e){}
 }
 
 function resetVerify(){
-  vState = { sku:'', tucPass:null, eanPass:null, bbePass:null, tucScanned:'', eanScanned:'', bbeTyped:'', expectedBBE:'' };
-  document.getElementById('v-result').style.display = 'none';
-  document.getElementById('v-step1').style.display = '';
-  document.getElementById('v-step2').style.display = 'none';
-  document.getElementById('v-step3').style.display = 'none';
-  document.getElementById('v-bbe-typed').value = '';
-  document.getElementById('v-bbe-check').textContent = '—';
-  document.getElementById('v-bbe-check').style.color = '#888';
-  document.getElementById('v-start-btn').style.display = 'none';
-  document.getElementById('v-product-info').style.display = 'none';
-  document.getElementById('v-sku').value = '';
+  vState={sku:'',tucPass:null,eanPass:null,bbePass:null,tucScanned:'',eanScanned:'',bbeTyped:'',expectedBBE:''};
+  document.getElementById('v-result').style.display='none';
+  document.getElementById('v-step1').style.display='';
+  document.getElementById('v-step2').style.display='none';
+  document.getElementById('v-step3').style.display='none';
+  document.getElementById('v-bbe-typed').value='';
+  document.getElementById('v-bbe-check').textContent='—';
+  document.getElementById('v-bbe-check').style.color='#888';
+  document.getElementById('v-start-btn').style.display='none';
+  document.getElementById('v-product-info').style.display='none';
+  document.getElementById('v-sku').value='';
 }
 
-async function saveVerification(sku, p, allPass){
-  if(!verificationsListId) return;
-  var id = Date.now()+'-'+Math.random().toString(36).substr(2,5);
-  var rec = {
-    id:id, sku:sku, name:p.name,
-    tucScanned:vState.tucScanned, tucExpected:String(p.tuc||''),
-    eanScanned:vState.eanScanned, eanExpected:String(p.ean13||''),
-    bbeTyped:vState.bbeTyped, bbeExpected:vState.expectedBBE,
-    tucPass:vState.tucPass, eanPass:vState.eanPass, bbePass:vState.bbePass,
-    pass:allPass,
-    by:currentAccount?(currentAccount.name||currentAccount.username):'',
-    ts:new Date().toISOString()
-  };
+async function saveVerification(sku,p,allPass){
+  if(!verificationsListId)return;
+  var id=Date.now()+'-'+Math.random().toString(36).substr(2,5);
+  var rec={id:id,sku:sku,name:p.name,tucScanned:vState.tucScanned,tucExpected:String(p.tuc||''),eanScanned:vState.eanScanned,eanExpected:String(p.ean13||''),bbeTyped:vState.bbeTyped,bbeExpected:vState.expectedBBE,tucPass:vState.tucPass,eanPass:vState.eanPass,bbePass:vState.bbePass,pass:allPass,by:currentAccount?(currentAccount.name||currentAccount.username):'',ts:new Date().toISOString()};
   verifyLogs.unshift(rec);
   renderVerifyLog();
   try{
     await graph('POST','/sites/'+siteId+'/lists/'+verificationsListId+'/items',{fields:{
-      Title: sku,
-      SKU: sku,
-      ProductName: p.name,
-      TUCScanned: vState.tucScanned,
-      TUCExpected: String(p.tuc||''),
-      EAN13Scanned: vState.eanScanned,
-      EAN13Expected: String(p.ean13||''),
-      BBEScanned: vState.bbeTyped,
-      BBEExpected: vState.expectedBBE,
-      Result: allPass ? 'PASS' : 'FAIL',
-      VerificationType: 'Full',
-      VerifiedBy: currentAccount?(currentAccount.name||currentAccount.username):'',
-      RecordID: id
+      Title:sku,SKU:sku,ProductName:p.name,
+      TUCScanned:vState.tucScanned,EAN13Scanned:vState.eanScanned,EAN13Expected:String(p.ean13||''),
+      BBEScanned:vState.bbeTyped,BBEExpected:vState.expectedBBE,
+      VerificationType:(allPass?'PASS':'FAIL'),RecordID:id
     }});
-  }catch(e){ toast('Verification not saved: '+e.message, true); }
+  }catch(e){toast('Verification not saved: '+e.message,true);}
 }
 
 async function loadVerifications(){
-  if(!verificationsListId) return;
-  var today = new Date().toISOString().slice(0,10);
+  if(!verificationsListId)return;
+  var today=new Date().toISOString().slice(0,10);
   try{
-    var data = await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields');
-    verifyLogs = data.value
-      .filter(function(item){ return item.createdDateTime.slice(0,10) === today; })
+    var data=await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields');
+    verifyLogs=data.value
+      .filter(function(item){return item.createdDateTime.slice(0,10)===today;})
       .map(function(item){
-        var f = item.fields;
-        return{
-          id:f.RecordID||item.id, sku:f.SKU||'', name:f.ProductName||'',
-          tucScanned:f.TUCScanned||'', tucExpected:f.TUCExpected||'',
-          eanScanned:f.EAN13Scanned||'', eanExpected:f.EAN13Expected||'',
-          bbeTyped:f.BBEScanned||'', bbeExpected:f.BBEExpected||'',
-          tucPass:f.TUCScanned===f.TUCExpected,
-          eanPass:f.EAN13Scanned===f.EAN13Expected,
-          bbePass:f.BBEScanned===f.BBEExpected,
-          pass:f.Result==='PASS',
-          by:f.VerifiedBy||'', ts:item.createdDateTime
-        };
+        var f=item.fields;
+        return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',tucScanned:f.TUCScanned||'',tucExpected:f.TUCExpected||'',eanScanned:f.EAN13Scanned||'',eanExpected:f.EAN13Expected||'',bbeTyped:f.BBEScanned||'',bbeExpected:f.BBEExpected||'',tucPass:f.TUCScanned===f.TUCExpected,eanPass:f.EAN13Scanned===f.EAN13Expected,bbePass:f.BBEScanned===f.BBEExpected,pass:f.Result==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
       });
     renderVerifyLog();
-  }catch(e){ toast('Could not load verification log: '+e.message, true); }
+  }catch(e){toast('Could not load verification log: '+e.message,true);}
 }
 
 function renderVerifyLog(){
-  var body = document.getElementById('v-log-body');
-  var count = document.getElementById('v-log-count');
-  count.textContent = verifyLogs.length;
-  if(!verifyLogs.length){ body.innerHTML='<div class="empty">No verifications today</div>'; return; }
-  var html = '<table class="tbl"><thead><tr><th>Time</th><th>SKU</th><th>Product</th><th>BBE</th><th>TUC</th><th>EAN-13</th><th>Result</th><th>User</th></tr></thead><tbody>';
+  var body=document.getElementById('v-log-body');
+  document.getElementById('v-log-count').textContent=verifyLogs.length;
+  if(!verifyLogs.length){body.innerHTML='<div class="empty">No verifications today</div>';return;}
+  var html='<table class="tbl"><thead><tr><th>Time</th><th>SKU</th><th>Product</th><th>BBE</th><th>TUC</th><th>EAN-13</th><th>Result</th><th>User</th></tr></thead><tbody>';
   verifyLogs.forEach(function(r){
-    function badge(pass){
-      return pass
-        ? '<span style="background:#d4edda;color:#155724;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✓</span>'
-        : '<span style="background:#f8d7da;color:#721c24;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✗</span>';
-    }
-    var overallStyle = r.pass
-      ? 'color:#155724;background:#d4edda;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600'
-      : 'color:#721c24;background:#f8d7da;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600';
-    html += '<tr>';
-    html += '<td>'+new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td>';
-    html += '<td><strong>'+r.sku+'</strong></td>';
-    html += '<td>'+r.name+'</td>';
-    html += '<td>'+badge(r.bbePass)+' '+r.bbeTyped+'</td>';
-    html += '<td>'+badge(r.tucPass)+'</td>';
-    html += '<td>'+badge(r.eanPass)+'</td>';
-    html += '<td><span style="'+overallStyle+'">'+(r.pass?'PASS':'FAIL')+'</span></td>';
-    html += '<td style="color:#aaa">'+r.by+'</td>';
-    html += '</tr>';
+    function badge(pass){return pass?'<span style="background:#d4edda;color:#155724;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✓</span>':'<span style="background:#f8d7da;color:#721c24;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600">✗</span>';}
+    var overallStyle=r.pass?'color:#155724;background:#d4edda;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600':'color:#721c24;background:#f8d7da;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600';
+    html+='<tr><td>'+new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</td><td><strong>'+r.sku+'</strong></td><td>'+r.name+'</td><td>'+badge(r.bbePass)+' '+r.bbeTyped+'</td><td>'+badge(r.tucPass)+'</td><td>'+badge(r.eanPass)+'</td><td><span style="'+overallStyle+'">'+(r.pass?'PASS':'FAIL')+'</span></td><td style="color:#aaa">'+r.by+'</td></tr>';
   });
-  html += '</tbody></table>';
-  body.innerHTML = html;
+  body.innerHTML=html+'</tbody></table>';
 }
-// ── Code 128C barcode data ────────────────────────────────────────────────────
+
+// ── GS1-128 barcode (Code 128C + FNC1) ───────────────────────────────────────
 var C128_PATTERNS=[[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,2,1,3],[1,1,3,2,3,1],[2,1,3,2,3,1],[2,1,1,1,3,3],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,1,3,1],[2,3,3,1,3,1],[1,1,2,2,1,4],[1,2,2,1,1,4],[1,4,1,1,2,2],[1,4,2,1,1,2],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,4,1,2],[1,1,4,2,1,2],[1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,4,1,2,1],[2,1,1,4,1,2],[4,1,1,1,2,2],[4,1,2,1,1,2],[1,1,1,1,4,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[1,4,1,1,1,3],[4,1,1,3,1,1],[1,1,1,4,1,3],[1,1,1,4,3,1],[4,1,1,1,3,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,1,4],[2,1,1,4,1,1],[2,3,3,1,1,1],[1,4,3,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,2,4,1],[1,2,1,4,2,1],[4,1,2,1,2,1],[4,2,1,2,1,1],[1,2,4,1,2,1]];
 var C128_STOP=[2,3,3,1,1,1,2];
 
-function getBarcodeData(sscc){
+function getGS1128BarcodeData(sscc){
   var digits=sscc.replace(/\D/g,'');
-  // Code 128C requires even number of digits — pad with leading zero if needed
-  if(digits.length % 2 !== 0) digits = '0' + digits;
-  var vals=[105]; var chk=105; var pos=1;
+  if(digits.length%2!==0)digits='0'+digits;
+  var START_C=105, FNC1=102;
+  var vals=[START_C,FNC1];
+  var chk=START_C+FNC1*1;
+  var pos=2;
   for(var i=0;i<digits.length;i+=2){
     var v=parseInt(digits.substring(i,i+2));
-    if(v < 0 || v > 102 || !C128_PATTERNS[v]){
-      console.error('Invalid Code128C value:', v, 'at position', i, 'digits:', digits);
-      continue;
-    }
-    vals.push(v); chk+=v*pos; pos++;
+    vals.push(v);
+    chk+=v*pos;
+    pos++;
   }
-  chk=chk%103; vals.push(chk);
+  chk=chk%103;
+  vals.push(chk);
   var bars=[];
-  vals.forEach(function(v){
-    if(C128_PATTERNS[v]) C128_PATTERNS[v].forEach(function(b){bars.push(b);});
-  });
+  vals.forEach(function(v){if(C128_PATTERNS[v])C128_PATTERNS[v].forEach(function(b){bars.push(b);});});
   C128_STOP.forEach(function(b){bars.push(b);});
   return bars;
 }
 
-function drawBarcode(doc, bars, centerX, startY, totalWidthMM, heightMM, withQuiet){
-  var totalUnits = bars.reduce(function(a,b){return a+b;},0);
-  var quiet = withQuiet ? 2 : 0;
-  var unitW = (totalWidthMM - quiet*2) / totalUnits;
-  var x = centerX - totalWidthMM/2 + quiet;
-  doc.setFillColor(255,255,255);
-  doc.rect(centerX - totalWidthMM/2, startY, totalWidthMM, heightMM, 'F');
-  bars.forEach(function(b,i){
-    if(i%2===0){
-      doc.setFillColor(0,0,0);
-      doc.rect(x, startY, b*unitW, heightMM, 'F');
+// ── ITF-14 barcode ────────────────────────────────────────────────────────────
+var ITF_PATTERNS=[
+  [1,1,2,2,1], // 0
+  [2,1,1,1,2], // 1
+  [1,2,1,1,2], // 2
+  [2,2,1,1,1], // 3
+  [1,1,2,1,2], // 4
+  [2,1,2,1,1], // 5
+  [1,2,2,1,1], // 6
+  [1,1,1,2,2], // 7
+  [2,1,1,2,1], // 8
+  [1,2,1,2,1]  // 9
+];
+
+function getITF14BarcodeData(tuc){
+  var digits=tuc.replace(/\D/g,'');
+  while(digits.length<14)digits='0'+digits;
+  digits=digits.substring(0,14);
+  var elements=[];
+  // Start: narrow bar + narrow space
+  elements.push({w:1,bar:true},{w:1,bar:false});
+  for(var i=0;i<14;i+=2){
+    var d1=parseInt(digits[i]);
+    var d2=parseInt(digits[i+1]);
+    var p1=ITF_PATTERNS[d1]; // bars
+    var p2=ITF_PATTERNS[d2]; // spaces
+    for(var j=0;j<5;j++){
+      elements.push({w:p1[j],bar:true});
+      elements.push({w:p2[j],bar:false});
     }
-    x += b*unitW;
+  }
+  // Stop: wide bar + narrow space + narrow bar
+  elements.push({w:2,bar:true},{w:1,bar:false},{w:1,bar:true});
+  return elements;
+}
+
+// ── Draw: Code 128 / GS1-128 ──────────────────────────────────────────────────
+function drawBarcode(doc,bars,centerX,startY,totalWidthMM,heightMM,withQuiet){
+  var totalUnits=bars.reduce(function(a,b){return a+b;},0);
+  var quiet=withQuiet?2:0;
+  var unitW=(totalWidthMM-quiet*2)/totalUnits;
+  var x=centerX-totalWidthMM/2+quiet;
+  doc.setFillColor(255,255,255);
+  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM,'F');
+  bars.forEach(function(b,i){
+    if(i%2===0){doc.setFillColor(0,0,0);doc.rect(x,startY,b*unitW,heightMM,'F');}
+    x+=b*unitW;
+  });
+}
+
+// ── Draw: ITF-14 with bearer bars ─────────────────────────────────────────────
+function drawITF14(doc,elements,centerX,startY,totalWidthMM,heightMM){
+  var totalUnits=elements.reduce(function(a,e){return a+e.w;},0);
+  var quietMM=3;
+  var unitW=(totalWidthMM-quietMM*2)/totalUnits;
+  var bearerH=1.0;
+  // White background
+  doc.setFillColor(255,255,255);
+  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,heightMM+bearerH*2,'F');
+  // Top bearer bar
+  doc.setFillColor(0,0,0);
+  doc.rect(centerX-totalWidthMM/2,startY,totalWidthMM,bearerH,'F');
+  // Bottom bearer bar
+  doc.rect(centerX-totalWidthMM/2,startY+bearerH+heightMM,totalWidthMM,bearerH,'F');
+  // Bars
+  var x=centerX-totalWidthMM/2+quietMM;
+  var barTop=startY+bearerH;
+  elements.forEach(function(e){
+    if(e.bar){doc.setFillColor(0,0,0);doc.rect(x,barTop,e.w*unitW,heightMM,'F');}
+    x+=e.w*unitW;
   });
 }
 </script>
