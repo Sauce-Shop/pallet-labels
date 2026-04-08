@@ -127,7 +127,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.7</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v2.8</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -1193,8 +1193,10 @@ function getGS1128BarcodeData(sscc){
   dataPairs.forEach(function(v){
     if(C128_PATTERNS[v])C128_PATTERNS[v].forEach(function(b){bars.push(b);});
   });
-  // Check symbol
-  if(C128_PATTERNS[chk])C128_PATTERNS[chk].forEach(function(b){bars.push(b);});
+  // Check symbol — use FNC1 pattern if chk===102, otherwise look up table
+  var chkPattern = (chk===102) ? C128_FNC1_PATTERN : C128_PATTERNS[chk];
+  if(chkPattern) chkPattern.forEach(function(b){bars.push(b);});
+  else console.error('GS1-128: no pattern for check symbol',chk);
   // Stop
   C128_STOP.forEach(function(b){bars.push(b);});
   return bars;
