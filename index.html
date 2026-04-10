@@ -37,7 +37,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tbl th{text-align:left;padding:6px 8px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 .tbl td{padding:7px 8px;border-bottom:1px solid #f0f0ee;white-space:nowrap}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:#fafaf9}
+.tbl tr:hover td{background:rgba(0,0,0,.02)}
 .mono{font-family:'Courier New',monospace;font-size:11px}
 .empty{padding:3rem;text-align:center;color:#bbb;font-size:13px}
 .badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;background:#f0f0ee;color:#777;border:1px solid #e5e5e2}
@@ -61,8 +61,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   html,body{margin:0;padding:0;background:#fff}
   body>*:not(#print-area){display:none !important}
   #print-area{display:block !important;margin:0;padding:0}
-  .lpage{width:148mm;min-height:210mm;border:1px solid #000;font-family:Arial,Helvetica,sans-serif;margin:0 auto;background:#fff;page-break-after:always;display:flex;flex-direction:column}
-  .lpage:last-child{page-break-after:avoid}
 }
 #print-area{display:none}
 </style>
@@ -86,7 +84,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.2</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.3</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -204,6 +202,9 @@ const CONFIG = {
         <button class="btn" onclick="exportCSV()">Export CSV</button>
         <button class="btn" onclick="reprintSelected()">Reprint selected</button>
       </div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px">
+        <span style="display:inline-block;width:12px;height:12px;background:#fff8e1;border:1px solid #ffe082;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Yellow = part pallet (cases differ from product default)
+      </div>
       <div class="tbl-wrap"><div id="history-body"><div class="empty">Click Refresh to load history</div></div></div>
     </div>
   </div>
@@ -257,9 +258,8 @@ const CONFIG = {
   function tryNext(){
     if(idx>=cdns.length){
       document.getElementById('signin-error').style.display='block';
-      document.getElementById('signin-error').innerHTML='<strong>Could not load sign-in library.</strong><br>Make sure you are opening this page via its https:// GitHub Pages URL in Microsoft Edge or Chrome.';
-      document.getElementById('signin-btn').disabled=true;
-      return;
+      document.getElementById('signin-error').innerHTML='<strong>Could not load sign-in library.</strong><br>Open via https:// GitHub Pages URL in Edge or Chrome.';
+      document.getElementById('signin-btn').disabled=true;return;
     }
     var s=document.createElement('script');s.src=cdns[idx++];
     s.onload=function(){window._msalLoaded=true;};
@@ -284,7 +284,7 @@ var siteId=null,labelsListId=null,counterListId=null,counterItemId=null,products
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener('load',function(){
   if(CONFIG.clientId==='YOUR_CLIENT_ID_HERE'){
-    document.getElementById('signin-screen').innerHTML='<div style="max-width:480px;margin:4rem auto;text-align:center;padding:2rem"><div style="font-size:36px">⚙️</div><h2 style="font-size:20px;margin:12px 0">Setup required</h2><p style="color:#666;line-height:1.7">Fill in <strong>clientId</strong>, <strong>tenantId</strong>, and <strong>siteUrl</strong> in the CONFIG block.</p></div>';
+    document.getElementById('signin-screen').innerHTML='<div style="max-width:480px;margin:4rem auto;text-align:center;padding:2rem"><div style="font-size:36px">⚙️</div><h2 style="font-size:20px;margin:12px 0">Setup required</h2><p style="color:#666;line-height:1.7">Fill in clientId, tenantId, and siteUrl in the CONFIG block.</p></div>';
     return;
   }
   var attempts=0;
@@ -371,7 +371,7 @@ async function resolveSiteAndLists(){
     toast(e.message,true);
   }
 }
-async function testConnection(){await resolveSiteAndLists();toast('Connection test done — check Settings for result');}
+async function testConnection(){await resolveSiteAndLists();toast('Connection test done — check Settings');}
 
 // ── Products ──────────────────────────────────────────────────────────────────
 async function loadProducts(){
@@ -385,7 +385,7 @@ async function loadProducts(){
       var f=item.fields;
       var sku=f.SKU||f.Title||'';
       if(!sku)return;
-      products[sku]={sku:sku,name:f.ProductName||'',unitsPerCase:f.UnitsPerCase||'',caseWeight:f.CaseWeight||'',casesOnPallet:f.CasesOnPallet||'',tuc:f.TUC||'',info:f.Info||'',ean13:f._x0045_AN13||'',shelfLifeMonths:f.ShelfLifeMonths||''};
+      products[sku]={sku:sku,name:f.ProductName||'',unitsPerCase:f.UnitsPerCase||'',caseWeight:f.CaseWeight||'',casesOnPallet:f.CasesOnPallet||'',tuc:f.TUC||'',info:f.info||'',ean13:f._x0045_AN13||'',shelfLifeMonths:f.ShelfLifeMonths||''};
       var opt=document.createElement('option');opt.value=sku;opt.textContent=sku+' — '+f.ProductName;
       sel.appendChild(opt);
     });
@@ -494,7 +494,7 @@ function collectForm(){
     batch:document.getElementById('f-batch').value.trim(),
     bbe:document.getElementById('f-bbe').value,
     cases:document.getElementById('f-cases').value||String(p.casesOnPallet)||'',
-    caseWeight:String(p.caseWeight)||'',unitsPerCase:String(p.unitsPerCase)||'',
+    caseWeight:String(p.caseWeight||''),unitsPerCase:String(p.unitsPerCase||''),
     tuc:String(p.tuc||''),info:String(p.info||''),
     numPallets:parseInt(document.getElementById('f-pallets').value)||1
   };
@@ -568,14 +568,32 @@ function renderHistory(){
   var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU</th><th>Product</th><th>Batch</th><th>BBE</th><th>Pallet #</th><th>Cases</th><th>Status</th><th>User</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
     var isDNP=r.status==='Did Not Produce';
-    var statusBadge=isDNP?'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>':'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
-    var rs=isDNP?' style="opacity:.6;text-decoration:line-through"':'';
+    var productDefault=products[r.sku]?String(products[r.sku].casesOnPallet):'';
+    var isPartPallet=r.cases&&productDefault&&r.cases!==productDefault;
+    var statusBadge=isDNP
+      ?'<span style="background:#f8d7da;color:#721c24;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Did Not Produce</span>'
+      :'<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Produced</span>';
+    // Row styling: DNP = strikethrough, part pallet = yellow background
+    var rowBg=isDNP?'':isPartPallet?'background:#fff8e1;':'';
+    var textDecor=isDNP?'opacity:.6;text-decoration:line-through;':'';
+    var rs=rowBg||textDecor?' style="'+rowBg+textDecor+'"':'';
     var tn=r.name.length>22?r.name.substring(0,22)+'…':r.name;
-    html+='<tr><td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
-    html+='<td'+rs+'>'+fmtDate(r.ts)+'</td><td class="mono"'+rs+'>'+fmtSSCC(r.sscc)+'</td><td'+rs+'><strong>'+r.sku+'</strong></td><td'+rs+' title="'+r.name+'">'+tn+'</td><td'+rs+'>'+(r.batch||'—')+'</td><td'+rs+'>'+fmtBBE(r.bbe)+'</td><td'+rs+'>'+(r.palletNumber||'—')+'</td><td'+rs+'>'+(r.cases||'—')+'</td><td>'+statusBadge+'</td><td style="color:#aaa"'+rs+'>'+(r.generatedBy||'')+'</td>';
+    html+='<tr'+rs+'>';
+    html+='<td><input type="checkbox"'+(selectedIds.has(r.id)?' checked':'')+' onchange="toggleSel(\''+r.id+'\',this)"></td>';
+    html+='<td>'+fmtDate(r.ts)+'</td>';
+    html+='<td class="mono">'+fmtSSCC(r.sscc)+'</td>';
+    html+='<td><strong>'+r.sku+'</strong></td>';
+    html+='<td title="'+r.name+'">'+tn+'</td>';
+    html+='<td>'+(r.batch||'—')+'</td>';
+    html+='<td>'+fmtBBE(r.bbe)+'</td>';
+    html+='<td>'+(r.palletNumber||'—')+'</td>';
+    html+='<td>'+(r.cases||'—')+(isPartPallet?' <span style="background:#fff3cd;color:#856404;padding:1px 6px;border-radius:99px;font-size:10px;font-weight:600">Part</span>':'')+'</td>';
+    html+='<td>'+statusBadge+'</td>';
+    html+='<td style="color:#aaa">'+(r.generatedBy||'')+'</td>';
     var btns='<button class="btn sm" onclick="reprintById(\''+r.id+'\')">Reprint</button>';
     if(!isDNP)btns+=' <button class="btn sm danger" onclick="markDNP(\''+r.id+'\',\''+r.spId+'\')" title="Mark as Did Not Produce">DNP</button>';
-    html+='<td style="white-space:nowrap">'+btns+'</td></tr>';
+    html+='<td style="white-space:nowrap">'+btns+'</td>';
+    html+='</tr>';
   });
   body.innerHTML=html+'</tbody></table>';
 }
@@ -595,8 +613,8 @@ async function markDNP(id,spId){
 function updateStats(){var today=new Date().toDateString();document.getElementById('stat-total').textContent=allRecords.length;document.getElementById('stat-today').textContent=allRecords.filter(function(r){return new Date(r.ts).toDateString()===today;}).length;document.getElementById('stat-serial').textContent=serialRef-1;}
 function exportCSV(){
   if(!allRecords.length){alert('Load history first');return;}
-  var rows=['date,sscc,sku,product,batch,bbe,cases,user'];
-  allRecords.forEach(function(r){rows.push([fmtDate(r.ts),r.sscc,r.sku,'"'+r.name+'"',r.batch||'',r.bbe||'',r.cases||'',r.generatedBy||''].join(','));});
+  var rows=['date,sscc,sku,product,batch,bbe,pallet_number,cases,status,user'];
+  allRecords.forEach(function(r){rows.push([fmtDate(r.ts),r.sscc,r.sku,'"'+r.name+'"',r.batch||'',r.bbe||'',r.palletNumber||'',r.cases||'',r.status||'',r.generatedBy||''].join(','));});
   var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));a.download='pallet_labels_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exported');
 }
 
@@ -615,101 +633,6 @@ function showPage(p){
 }
 function updateSettingsForm(){document.getElementById('s-prefix').value=cfg.prefix;document.getElementById('s-ext').value=cfg.ext;}
 function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},isErr?5000:2500);}
-
-// ── PDF / Print ───────────────────────────────────────────────────────────────
-function doPrint(recs){
-  console.log('doPrint called with',recs.length,'records');
-  if(!window.jspdf){toast('PDF library not loaded — reload the page',true);return;}
-  try{
-    var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
-    recs.forEach(function(r,pageIndex){
-      if(pageIndex>0)doc.addPage('a5','portrait');
-      var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'-';
-      var casesDisp=r.cases||'-';
-      var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'-';
-      var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
-      var bbeDisp=fmtBBE(r.bbe);
-      var W=148,y=0;
-
-      doc.setDrawColor(0);doc.setLineWidth(0.5);doc.rect(0,y,W,18,'S');
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(12);
-      doc.text('SAUCE SHOP PALLET LABEL',W/2,y+7,{align:'center'});
-      doc.setFontSize(7);doc.setFont('helvetica','normal');
-      doc.text('Sauce Shop Address: Unit 2/3 Centurion Way, Nottingham, NG2 1RW',W/2,y+13,{align:'center'});
-      y+=18;
-
-      function divider(yy){doc.setDrawColor(0);doc.line(0,yy,W,yy);}
-      function lbl(txt,x,yy){doc.setTextColor(100,100,100);doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(txt.toUpperCase(),x,yy);}
-      function val(txt,x,yy,size){doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(size||9);doc.text(String(txt||'-'),x,yy);}
-
-      divider(y);
-      lbl('Name',4,y+5);val(r.name,4,y+10);
-      lbl('SKU',W/2+2,y+5);val(r.sku,W/2+2,y+10);
-      if(r.palletNumber){lbl('Production Number',W*3/4+2,y+5);val(String(r.palletNumber),W*3/4+2,y+10,9);}
-      y+=15;
-
-      divider(y);
-      var cols=[4,W/4+2,W/2+2,W*3/4+2];
-      lbl('Units per Case',cols[0],y+4);val(r.unitsPerCase||'-',cols[0],y+9);
-      lbl('Cases on Pallet',cols[1],y+4);val(casesDisp,cols[1],y+9);
-      lbl('Case Weight',cols[2],y+4);val(caseWeightDisp,cols[2],y+9);
-      lbl('Total Weight',cols[3],y+4);val(totalWeight,cols[3],y+9);
-      y+=14;
-
-      divider(y);
-      lbl('Information',4,y+4);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
-      doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-8});
-      y+=14;
-
-      divider(y);
-      lbl('Batch',4,y+4);val(r.batch,4,y+9);
-      lbl('TUC',W/2+2,y+4);val(r.tuc||'-',W/2+2,y+9);
-      y+=14;
-
-      // TUC barcode — ITF-14
-      if(r.tuc){
-        divider(y);
-        addBarcodeToDoc(doc, r.tuc, 'ITF14', W/2, y+2, 90, 16);
-        doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
-        doc.text('TUC: '+r.tuc, W/2, y+22, {align:'center'});
-        y+=25;
-      }
-
-      divider(y);
-      lbl('SKU:',4,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(r.sku,16,y+18);
-      lbl('BBE:',W/2+2,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(bbeDisp,W/2+14,y+18);
-      y+=24;
-
-      // SSCC barcode — GS1-128
-      divider(y);
-      addBarcodeToDoc(doc, r.sscc, 'CODE128', W/2, y+2, 120, 20);
-      y+=26;
-
-      doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
-      doc.text(ssccFull,W/2,y+4,{align:'center'});
-      y+=8;
-
-      divider(y);
-      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);
-      var byText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
-      doc.text('Generated: '+fmtDate(r.ts)+'   By: '+byText,W/2,y+4,{align:'center',maxWidth:W-8});
-    });
-
-    var now=new Date();
-    var ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-    var ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
-    var sk=recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
-    doc.save('pallet-label-'+ds+'-'+ts+'-'+sk+(recs.length>1?'-x'+recs.length:'')+'.pdf');
-    toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
-  }catch(err){
-    console.error('PDF generation error:',err);
-    toast('PDF error: '+err.message,true);
-    alert('PDF generation failed: '+err.message);
-  }
-}
 
 // ── Verify ────────────────────────────────────────────────────────────────────
 var verifyLogs=[];
@@ -841,7 +764,7 @@ async function loadVerifications(){
     var data=await graph('GET','/sites/'+siteId+'/lists/'+verificationsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=200&$select=id,createdDateTime,fields');
     verifyLogs=data.value.filter(function(item){return item.createdDateTime.slice(0,10)===today;}).map(function(item){
       var f=item.fields;
-      return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',tucScanned:f.TUCScanned||'',eanScanned:f.EAN13Scanned||'',bbeTyped:f.BBEScanned||'',bbeExpected:f.BBEExpected||'',tucPass:f.TUCScanned===(f.TUCExpected||''),eanPass:f.EAN13Scanned===f.EAN13Expected,bbePass:f.BBEScanned===f.BBEExpected,pass:f.Result==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
+      return{id:f.RecordID||item.id,sku:f.SKU||'',name:f.ProductName||'',tucScanned:f.TUCScanned||'',eanScanned:f.EAN13Scanned||'',bbeTyped:f.BBEScanned||'',bbeExpected:f.BBEExpected||'',tucPass:!!f.TUCScanned,eanPass:f.EAN13Scanned===f.EAN13Expected,bbePass:f.BBEScanned===f.BBEExpected,pass:f.VerificationType==='PASS',by:f.VerifiedBy||'',ts:item.createdDateTime};
     });
     renderVerifyLog();
   }catch(e){toast('Could not load verification log: '+e.message,true);}
@@ -859,40 +782,113 @@ function renderVerifyLog(){
   body.innerHTML=html+'</tbody></table>';
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// BARCODE ENGINE — uses JsBarcode to render to canvas, then inserts into PDF
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function renderBarcodeToCanvas(value, format, widthMM, heightMM){
-  // Convert mm to px at 96dpi for canvas (jsPDF will scale back to mm)
-  var PX_PER_MM = 96/25.4;
-  var canvas = document.createElement('canvas');
+// ── PDF ───────────────────────────────────────────────────────────────────────
+function doPrint(recs){
+  if(!window.jspdf){toast('PDF library not loaded — reload the page',true);return;}
   try{
-    JsBarcode(canvas, value, {
-      format: format,        // 'CODE128' for GS1-128, 'ITF14' for TUC
-      width: 2,              // module width in px (JsBarcode scales internally)
-      height: Math.round(heightMM * PX_PER_MM),
-      displayValue: false,   // we add human-readable text ourselves
-      margin: 0,
-      background: '#ffffff',
-      lineColor: '#000000'
+    var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
+    recs.forEach(function(r,pageIndex){
+      if(pageIndex>0)doc.addPage('a5','portrait');
+      var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'-';
+      var casesDisp=r.cases||'-';
+      var caseWeightDisp=r.caseWeight?r.caseWeight+' KG':'-';
+      var ssccFull='(00)'+r.sscc+'(37)'+r.cases;
+      var bbeDisp=fmtBBE(r.bbe);
+      var W=148,y=0;
+
+      doc.setDrawColor(0);doc.setLineWidth(0.5);doc.rect(0,y,W,18,'S');
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(12);
+      doc.text('SAUCE SHOP PALLET LABEL',W/2,y+7,{align:'center'});
+      doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.text('Sauce Shop Address: Unit 2/3 Centurion Way, Nottingham, NG2 1RW',W/2,y+13,{align:'center'});
+      y+=18;
+
+      function divider(yy){doc.setDrawColor(0);doc.line(0,yy,W,yy);}
+      function lbl(txt,x,yy){doc.setTextColor(100,100,100);doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(txt.toUpperCase(),x,yy);}
+      function val(txt,x,yy,size){doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(size||9);doc.text(String(txt||'-'),x,yy);}
+
+      divider(y);
+      lbl('Name',4,y+5);val(r.name,4,y+10);
+      lbl('SKU',W/2+2,y+5);val(r.sku,W/2+2,y+10);
+      if(r.palletNumber){lbl('Production Number',W*3/4+2,y+5);val(String(r.palletNumber),W*3/4+2,y+10,9);}
+      y+=15;
+
+      divider(y);
+      var cols=[4,W/4+2,W/2+2,W*3/4+2];
+      lbl('Units per Case',cols[0],y+4);val(r.unitsPerCase||'-',cols[0],y+9);
+      lbl('Cases on Pallet',cols[1],y+4);val(casesDisp,cols[1],y+9);
+      lbl('Case Weight',cols[2],y+4);val(caseWeightDisp,cols[2],y+9);
+      lbl('Total Weight',cols[3],y+4);val(totalWeight,cols[3],y+9);
+      y+=14;
+
+      divider(y);
+      lbl('Information',4,y+4);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
+      doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-8});
+      y+=14;
+
+      divider(y);
+      lbl('Batch',4,y+4);val(r.batch,4,y+9);
+      lbl('TUC',W/2+2,y+4);val(r.tuc||'-',W/2+2,y+9);
+      y+=14;
+
+      if(r.tuc){
+        divider(y);
+        addBarcodeToDoc(doc,r.tuc,'ITF14',W/2,y+2,90,16);
+        doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
+        doc.text('TUC: '+r.tuc,W/2,y+22,{align:'center'});
+        y+=25;
+      }
+
+      divider(y);
+      lbl('SKU:',4,y+5);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(r.sku,16,y+18);
+      lbl('BBE:',W/2+2,y+5);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(bbeDisp,W/2+14,y+18);
+      y+=24;
+
+      divider(y);
+      addBarcodeToDoc(doc,r.sscc,'CODE128',W/2,y+2,120,20);
+      y+=26;
+
+      doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
+      doc.text(ssccFull,W/2,y+4,{align:'center'});
+      y+=8;
+
+      divider(y);
+      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);
+      var byText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
+      doc.text('Generated: '+fmtDate(r.ts)+'   By: '+byText,W/2,y+4,{align:'center',maxWidth:W-8});
     });
-  }catch(e){
-    console.error('JsBarcode error for value "'+value+'" format "'+format+'":', e);
-    return null;
+
+    var now=new Date();
+    var ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+    var sk=recs[0].sku.replace(/[^a-zA-Z0-9-]/g,'');
+    doc.save('pallet-label-'+ds+'-'+ts+'-'+sk+(recs.length>1?'-x'+recs.length:'')+'.pdf');
+    toast('PDF downloaded — '+(recs.length===1?'1 label':recs.length+' labels'));
+  }catch(err){
+    console.error('PDF generation error:',err);
+    toast('PDF error: '+err.message,true);
+    alert('PDF generation failed: '+err.message);
   }
-  return canvas;
 }
 
-function addBarcodeToDoc(doc, value, format, centerX, startY, totalWidthMM, heightMM){
-  var canvas = renderBarcodeToCanvas(value, format, totalWidthMM, heightMM);
-  if(!canvas){ console.error('Barcode canvas null for', value); return; }
-  var imgData = canvas.toDataURL('image/png');
-  var x = centerX - totalWidthMM/2;
-  // White background behind barcode area
-  doc.setFillColor(255,255,255);
-  doc.rect(x, startY, totalWidthMM, heightMM, 'F');
-  doc.addImage(imgData, 'PNG', x, startY, totalWidthMM, heightMM);
+function renderBarcodeToCanvas(value,format,heightMM){
+  var PX_PER_MM=96/25.4;
+  var canvas=document.createElement('canvas');
+  try{
+    JsBarcode(canvas,value,{format:format,width:2,height:Math.round(heightMM*PX_PER_MM),displayValue:false,margin:0,background:'#ffffff',lineColor:'#000000'});
+  }catch(e){console.error('JsBarcode error for "'+value+'" format "'+format+'":', e);return null;}
+  return canvas;
+}
+function addBarcodeToDoc(doc,value,format,centerX,startY,totalWidthMM,heightMM){
+  var canvas=renderBarcodeToCanvas(value,format,heightMM);
+  if(!canvas){console.error('Barcode canvas null for',value);return;}
+  var imgData=canvas.toDataURL('image/png');
+  var x=centerX-totalWidthMM/2;
+  doc.setFillColor(255,255,255);doc.rect(x,startY,totalWidthMM,heightMM,'F');
+  doc.addImage(imgData,'PNG',x,startY,totalWidthMM,heightMM);
 }
 </script>
 </body>
