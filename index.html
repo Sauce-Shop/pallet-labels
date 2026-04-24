@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 <title>Sauce Shop Pallet Labels</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -84,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v3.6</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -830,7 +831,6 @@ function doPrint(recs){
 
       divider(y);
       lbl('Batch',4,y+4);val(r.batch,4,y+9);
-      lbl('TUC',W/2+2,y+4);val(r.tuc||'-',W/2+2,y+9);
       y+=14;
 
       if(r.tuc){
@@ -842,11 +842,15 @@ function doPrint(recs){
       }
 
       divider(y);
+      // Left column: SKU + Batch stacked
       lbl('SKU:',4,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(r.sku,16,y+18);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(39);doc.text(r.sku,4,y+20);
+      lbl('BATCH:',4,y+26);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(39);doc.text(r.batch||'-',4,y+41);
+      // Right column: BBE
       lbl('BBE:',W/2+2,y+5);
-      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(bbeDisp,W/2+14,y+18);
-      y+=24;
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(39);doc.text(bbeDisp,W/2+2,y+20);
+      y+=46;
 
       divider(y);
       addBarcodeToDoc(doc,r.sscc,'CODE128',W/2,y+2,120,20);
