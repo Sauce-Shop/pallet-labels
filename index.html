@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.0</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.2</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -471,7 +471,7 @@ async function saveRecord(rec){
     await graph('POST','/sites/'+siteId+'/lists/'+labelsListId+'/items',{fields:{
       Title:rec.sscc||rec.sku,SKU:rec.sku,ProductName:rec.name,BatchNumber:rec.batch,BestBefore:rec.bbe,
       CasesOnPallet:rec.cases?parseInt(rec.cases):null,CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
-      TUC:rec.tuc||'',Info:rec.info||'',GeneratedBy:rec.generatedBy||'',RecordID:rec.id,
+      TUC:rec.tuc||'',info:rec.info||'',GeneratedBy:rec.generatedBy||'',RecordID:rec.id,
       PalletNumber:rec.palletNumber||1,BatchTotal:rec.batchTotal||1,Status:rec.status||'Produced',
       PrintType:rec.printType||'Pallet Label'
     }});
@@ -1000,12 +1000,11 @@ function fmtBBEFull(bbe){
   return String(lastDay).padStart(2,'0')+'/'+String(mo).padStart(2,'0')+'/'+yr;
 }
 function fmtBBECaseLabel(bbe){
-  // Returns MMM YY e.g. "Aug 27"
+  // Returns MMM YYYY e.g. "AUG 2027"
   if(!bbe)return'—';
   var p=bbe.split('-');if(p.length<2)return bbe;
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var yr=String(parseInt(p[0])).slice(-2);
-  return months[parseInt(p[1])-1]+' '+yr;
+  var months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return months[parseInt(p[1])-1]+' '+p[0];
 }
 
 function renderBarcodeToCanvas(value,format,heightMM){
