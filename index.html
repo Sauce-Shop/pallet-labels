@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.2</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.3</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -471,9 +471,9 @@ async function saveRecord(rec){
     await graph('POST','/sites/'+siteId+'/lists/'+labelsListId+'/items',{fields:{
       Title:rec.sscc||rec.sku,SKU:rec.sku,ProductName:rec.name,BatchNumber:rec.batch,BestBefore:rec.bbe,
       CasesOnPallet:rec.cases?parseInt(rec.cases):null,CaseWeight:rec.caseWeight?parseFloat(rec.caseWeight):null,
-      TUC:rec.tuc||'',info:rec.info||'',GeneratedBy:rec.generatedBy||'',RecordID:rec.id,
+      TUC:rec.tuc||'',Info:rec.info||'',GeneratedBy:rec.generatedBy||'',RecordID:rec.id,
       PalletNumber:rec.palletNumber||1,BatchTotal:rec.batchTotal||1,Status:rec.status||'Produced',
-      PrintType:rec.printType||'Pallet Label'
+      PalletType:rec.printType||'Pallet Label'
     }});
   }catch(e){toast('Record not saved: '+e.message,true);}
 }
@@ -484,7 +484,7 @@ async function loadHistory(){
     var data=await graph('GET','/sites/'+siteId+'/lists/'+labelsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=500&$select=id,createdDateTime,fields');
     allRecords=data.value.map(function(item){
       var f=item.fields;
-      return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime,palletNumber:f.PalletNumber||1,batchTotal:f.BatchTotal||1,status:f.Status||'Produced',printType:f.PrintType||'Pallet Label'};
+      return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime,palletNumber:f.PalletNumber||1,batchTotal:f.BatchTotal||1,status:f.Status||'Produced',printType:f.PalletType||'Pallet Label'};
     });
     updateStats();renderHistory();
     toast('Loaded '+allRecords.length+' records');
