@@ -85,12 +85,12 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.3</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.4</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
       <div class="nav">
-        <button class="active" onclick="showPage('generate')">Pallet Label</button>
+        <button class="active" onclick="showPage('generate')">Generate</button>
         <button onclick="showPage('verify')">Verify</button>
         <button onclick="showPage('history')">History</button>
         <button onclick="showPage('settings')">Settings</button>
@@ -111,7 +111,8 @@ const CONFIG = {
       <div class="sec-label">Label details</div>
       <div class="field">
         <label>SKU *</label>
-        <select id="f-sku" onchange="onSKUChange()"><option value="">— select a product —</option></select>
+        <input id="f-sku" type="text" list="sku-list" placeholder="Type or select a SKU…" oninput="onSKUChange()" autocomplete="off">
+        <datalist id="sku-list"></datalist>
       </div>
       <div class="product-preview" id="product-preview">Product details will appear here once you select a SKU.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -149,7 +150,10 @@ const CONFIG = {
       <div class="sec-label">Label verification</div>
       <div id="v-step1">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div class="field"><label>Select product *</label><select id="v-sku" onchange="onVerifySKUChange()"><option value="">— select a product —</option></select></div>
+          <div class="field"><label>Select product *</label>
+            <input id="v-sku" type="text" list="v-sku-list" placeholder="Type or select a SKU…" oninput="onVerifySKUChange()" autocomplete="off">
+            <datalist id="v-sku-list"></datalist>
+          </div>
           <div class="field"><label>BBE on label (MM/YYYY) *</label><input id="v-bbe-typed" type="text" placeholder="e.g. 09/2027" maxlength="7" oninput="onBBEInput(this)"></div>
         </div>
         <div id="v-product-info" style="display:none;margin-bottom:12px">
@@ -384,22 +388,29 @@ async function loadProducts(){
   try{
     var data=await graph('GET','/sites/'+siteId+'/lists/'+productsListId+'/items?$expand=fields&$top=500');
     products={};
-    var sel=document.getElementById('f-sku');
-    sel.innerHTML='<option value="">— select a product —</option>';
+    var dl=document.getElementById('sku-list');
+    var vdl=document.getElementById('v-sku-list');
+    if(dl)dl.innerHTML='';
+    if(vdl)vdl.innerHTML='';
     data.value.forEach(function(item){
       var f=item.fields;
       var sku=f.SKU||f.Title||'';
       if(!sku)return;
-      products[sku]={sku:sku,name:f.ProductName||'',unitsPerCase:f.UnitsPerCase||'',caseWeight:f.CaseWeight||'',casesOnPallet:f.CasesOnPallet||'',tuc:f.TUC||'',info:f.info||'',ean13:f._x0045_AN13||'',shelfLifeMonths:f.ShelfLifeMonths||''};
-      var opt=document.createElement('option');opt.value=sku;opt.textContent=sku+' — '+f.ProductName;
-      sel.appendChild(opt);
+      products[sku]={sku:sku,name:f.ProductName||'',unitsPerCase:f.UnitsPerCase||'',caseWeight:f.CaseWeight||'',casesOnPallet:f.CasesOnPallet||'',tuc:f.TUC||'',info:f.Info||'',ean13:f._x0045_AN13||'',shelfLifeMonths:f.ShelfLifeMonths||''};
+      [dl,vdl].forEach(function(list){
+        if(!list)return;
+        var opt=document.createElement('option');
+        opt.value=sku;
+        opt.label=sku+' — '+f.ProductName;
+        list.appendChild(opt);
+      });
     });
     document.getElementById('product-count').textContent=data.value.length+' products loaded';
     toast('Products loaded');
   }catch(e){toast('Could not load products: '+e.message,true);}
 }
 function onSKUChange(){
-  var sku=document.getElementById('f-sku').value;
+  var sku=document.getElementById('f-sku').value.trim();
   var p=products[sku];
   var el=document.getElementById('product-preview');
   if(!p||!sku){el.textContent='Product details will appear here once you select a SKU.';return;}
@@ -506,7 +517,8 @@ function collectForm(){
   };
 }
 function clearForm(){
-  document.getElementById('f-sku').value='';document.getElementById('f-batch').value='';
+  var skuEl=document.getElementById('f-sku');if(skuEl)skuEl.value='';
+  document.getElementById('f-batch').value='';
   document.getElementById('f-bbe').value='';document.getElementById('f-cases').value='';
   document.getElementById('f-pallets').value='1';
   document.getElementById('product-preview').textContent='Product details will appear here once you select a SKU.';
@@ -610,8 +622,16 @@ function renderHistory(){
 }
 function toggleAll(cb){document.querySelectorAll('#history-body tbody input[type=checkbox]').forEach(function(el){el.checked=cb.checked;});allRecords.forEach(function(r){if(cb.checked)selectedIds.add(r.id);else selectedIds.delete(r.id);});}
 function toggleSel(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);}
-function reprintById(id){var r=allRecords.find(function(x){return x.id===id;});if(r)doPrint([r]);}
-function reprintSelected(){var recs=allRecords.filter(function(r){return selectedIds.has(r.id);});if(!recs.length){alert('Select records to reprint');return;}doPrint(recs);toast('Reprinting '+recs.length+' label(s)');}
+function reprintById(id){var r=allRecords.find(function(x){return x.id===id;});if(!r)return;if(r.printType==='Case Label')doCasePrint(r);else doPrint([r]);}
+function reprintSelected(){
+  var recs=allRecords.filter(function(r){return selectedIds.has(r.id);});
+  if(!recs.length){alert('Select records to reprint');return;}
+  var pallets=recs.filter(function(r){return r.printType!=='Case Label';});
+  var cases=recs.filter(function(r){return r.printType==='Case Label';});
+  if(pallets.length)doPrint(pallets);
+  cases.forEach(function(r){doCasePrint(r);});
+  toast('Reprinting '+recs.length+' label(s)');
+}
 async function markDNP(id,spId){
   if(!confirm('Mark this pallet as "Did Not Produce"? This cannot be undone.'))return;
   var rec=allRecords.find(function(r){return r.id===id;});
@@ -650,12 +670,15 @@ var verifyLogs=[];
 var vState={sku:'',tucPass:null,eanPass:null,bbePass:null,tucScanned:'',eanScanned:'',bbeTyped:'',expectedBBE:''};
 
 function populateVerifySKU(){
-  var sel=document.getElementById('v-sku'),current=sel.value;
-  sel.innerHTML='<option value="">— select a product —</option>';
+  var dl=document.getElementById('v-sku-list');
+  if(!dl)return;
+  dl.innerHTML='';
   Object.keys(products).sort().forEach(function(sku){
-    var opt=document.createElement('option');opt.value=sku;opt.textContent=sku+' — '+products[sku].name;sel.appendChild(opt);
+    var opt=document.createElement('option');
+    opt.value=sku;
+    opt.label=sku+' — '+products[sku].name;
+    dl.appendChild(opt);
   });
-  if(current)sel.value=current;
 }
 function calcExpectedBBE(months){
   var d=new Date();d.setMonth(d.getMonth()+parseInt(months));
@@ -753,7 +776,7 @@ function resetVerify(){
   document.getElementById('v-bbe-typed').value='';
   document.getElementById('v-bbe-check').textContent='—';document.getElementById('v-bbe-check').style.color='#888';
   document.getElementById('v-start-btn').style.display='none';document.getElementById('v-product-info').style.display='none';
-  document.getElementById('v-sku').value='';
+  var vSkuEl=document.getElementById('v-sku');if(vSkuEl)vSkuEl.value='';
 }
 async function saveVerification(sku,p,allPass){
   if(!verificationsListId)return;
@@ -865,7 +888,7 @@ function doPrint(recs){
       y+=26;
 
       divider(y);
-      addBarcodeToDoc(doc,ssccFull,'CODE128',W/2,y+2,120,20);
+      addBarcodeToDoc(doc,ssccFull,'CODE128',W/2,y+2,90,20);
       y+=26;
 
       doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
