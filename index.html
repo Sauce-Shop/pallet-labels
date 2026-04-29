@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.5</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -888,7 +888,7 @@ function doPrint(recs){
       y+=26;
 
       divider(y);
-      addBarcodeToDoc(doc,ssccFull,'CODE128',W/2,y+2,90,20);
+      addBarcodeToDoc(doc,ssccFull,'CODE128',W/2,y+2,120,24);
       y+=26;
 
       doc.setTextColor(0,0,0);doc.setFont('courier','bold');doc.setFontSize(8);
@@ -1033,8 +1033,10 @@ function fmtBBECaseLabel(bbe){
 function renderBarcodeToCanvas(value,format,heightMM){
   var PX_PER_MM=96/25.4;
   var canvas=document.createElement('canvas');
+  // CODE128 with long strings needs wider bars for reliable scanning
+  var moduleWidth = format==='CODE128' ? 3 : 2;
   try{
-    JsBarcode(canvas,value,{format:format,width:2,height:Math.round(heightMM*PX_PER_MM),displayValue:false,margin:0,background:'#ffffff',lineColor:'#000000'});
+    JsBarcode(canvas,value,{format:format,width:moduleWidth,height:Math.round(heightMM*PX_PER_MM),displayValue:false,margin:0,background:'#ffffff',lineColor:'#000000'});
   }catch(e){console.error('JsBarcode error for "'+value+'" format "'+format+'":', e);return null;}
   return canvas;
 }
