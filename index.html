@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.7</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.9</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -1030,18 +1030,28 @@ function fmtBBECaseLabel(bbe){
   return months[parseInt(p[1])-1]+' '+p[0];
 }
 
-function renderBarcodeToCanvas(value,format,heightMM){
+function renderBarcodeToCanvas(value,format,heightMM,targetWidthMM){
   var PX_PER_MM=96/25.4;
   var canvas=document.createElement('canvas');
-  // Append to DOM temporarily — some browsers need this for canvas to render
   canvas.style.cssText='position:absolute;left:-9999px;top:-9999px;visibility:hidden';
   document.body.appendChild(canvas);
-  var moduleWidth = format==='CODE128' ? 4 : 2;
+
+  // ITF14: use width:3 (fits within 96mm case label)
+  // CODE128: keep at 4px as per original — pallet label works fine
+  var moduleWidth = format==='ITF14' ? 3 : 4;
+
   try{
-    JsBarcode(canvas,value,{format:format,width:moduleWidth,height:Math.round(heightMM*PX_PER_MM),displayValue:false,margin:0,background:'#ffffff',lineColor:'#000000'});
-    // Verify canvas actually has content
+    JsBarcode(canvas,value,{
+      format:format,
+      width:moduleWidth,
+      height:Math.round(heightMM*PX_PER_MM),
+      displayValue:false,
+      margin:0,
+      background:'#ffffff',
+      lineColor:'#000000'
+    });
     if(canvas.width===0||canvas.height===0){
-      console.error('Canvas has zero dimensions for value:',value,'format:',format);
+      console.error('Canvas zero dimensions for:',value,format);
       document.body.removeChild(canvas);
       return null;
     }
@@ -1054,7 +1064,7 @@ function renderBarcodeToCanvas(value,format,heightMM){
   return canvas;
 }
 function addBarcodeToDoc(doc,value,format,centerX,startY,totalWidthMM,heightMM){
-  var canvas=renderBarcodeToCanvas(value,format,heightMM);
+  var canvas=renderBarcodeToCanvas(value,format,heightMM,totalWidthMM);
   if(!canvas){console.error('Barcode canvas null for',value);return;}
   var imgData=canvas.toDataURL('image/png');
   var x=centerX-totalWidthMM/2;
