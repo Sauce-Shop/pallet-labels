@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v4.9</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.1</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -881,10 +881,12 @@ function doPrint(recs){
       lbl('BBE:',4,y+5);
       doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(49);doc.text(bbeDisp,4,y+22);
       y+=26;
-      // Batch full width
+      // Batch left half, Cases on Pallet right half
       divider(y);
       lbl('BATCH:',4,y+5);
       doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(49);doc.text(r.batch||'-',4,y+22);
+      lbl('CASES ON PALLET:',W/2+2,y+5);
+      doc.setTextColor(0,0,0);doc.setFont('helvetica','bold');doc.setFontSize(49);doc.text(casesDisp,W/2+2,y+22);
       y+=26;
 
       divider(y);
