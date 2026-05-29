@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.5</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.6</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -387,6 +387,42 @@ async function resolveSiteAndLists(){
   }
 }
 async function testConnection(){await resolveSiteAndLists();toast('Connection test done — check Settings');}
+
+// ── Counter ───────────────────────────────────────────────────────────────────
+async function loadCounter(){
+  if(!counterListId)return;
+  try{
+    var data=await graph('GET','/sites/'+siteId+'/lists/'+counterListId+'/items?$expand=fields&$top=1');
+    if(data.value.length>0){
+      var f=data.value[0].fields;
+      counterItemId=data.value[0].id;
+      serialRef=parseInt(f.SerialRef)||1;
+      cfg.prefix=f.GS1Prefix||cfg.prefix;
+      cfg.ext=parseInt(f.ExtDigit)>=0?parseInt(f.ExtDigit):cfg.ext;
+      updateSettingsForm();
+    }else{
+      var created=await graph('POST','/sites/'+siteId+'/lists/'+counterListId+'/items',{fields:{Title:'config',SerialRef:1,GS1Prefix:cfg.prefix,ExtDigit:cfg.ext}});
+      counterItemId=created.id;
+    }
+  }catch(e){toast('Could not load counter: '+e.message,true);}
+}
+async function incrementCounter(){
+  serialRef++;
+  if(!counterItemId)return;
+  try{await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{SerialRef:serialRef});}
+  catch(e){toast('Warning: counter not saved — '+e.message,true);}
+}
+async function saveSettings(){
+  var p=document.getElementById('s-prefix').value.replace(/\D/g,'');
+  var e=parseInt(document.getElementById('s-ext').value);
+  if(p.length<7||p.length>10){alert('Prefix must be 7–10 digits');return;}
+  if(isNaN(e)||e<0||e>9){alert('Extension digit must be 0–9');return;}
+  cfg.prefix=p;cfg.ext=e;
+  try{
+    await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{GS1Prefix:p,ExtDigit:e});
+    updateSSCCPreview();toast('Settings saved');
+  }catch(e2){toast('Save failed: '+e2.message,true);}
+}
 
 // ── Products ──────────────────────────────────────────────────────────────────
 async function loadProducts(){
