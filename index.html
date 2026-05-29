@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.1</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.3</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -111,8 +111,9 @@ const CONFIG = {
       <div class="sec-label">Label details</div>
       <div class="field">
         <label>SKU *</label>
-        <input id="f-sku" type="text" list="sku-list" placeholder="Type or select a SKU…" oninput="onSKUChange()" autocomplete="off">
+        <input id="f-sku" type="text" list="sku-list" placeholder="Type or select a SKU…" oninput="onSKUChange()" onblur="validateSKU()" autocomplete="off">
         <datalist id="sku-list"></datalist>
+        <div id="sku-error" style="font-size:12px;color:#c0392b;margin-top:3px;display:none">SKU not found — please select from the list</div>
       </div>
       <div class="product-preview" id="product-preview">Product details will appear here once you select a SKU.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -122,6 +123,10 @@ const CONFIG = {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="field"><label>Cases on pallet <span style="color:#aaa;font-weight:400">(overrides default)</span></label><input id="f-cases" type="number" placeholder="Leave blank to use product default"></div>
         <div class="field"><label>Number of pallet labels *</label><input id="f-pallets" type="number" min="1" value="1"></div>
+      </div>
+      <div class="field">
+        <label>Information <span style="color:#aaa;font-weight:400">(auto-filled — override if needed)</span></label>
+        <input id="f-info" type="text" placeholder="e.g. MIN:112482391|PRODUCT CODE:183985" oninput="this.dataset.edited='1'">
       </div>
       <div class="actions">
         <button class="btn primary" id="btn-gp" onclick="generateAndPrint()">Generate &amp; print pallet label</button>
@@ -280,6 +285,7 @@ const CONFIG = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -413,48 +419,28 @@ function onSKUChange(){
   var sku=document.getElementById('f-sku').value.trim();
   var p=products[sku];
   var el=document.getElementById('product-preview');
+  var errEl=document.getElementById('sku-error');
+  if(errEl)errEl.style.display='none';
   if(!p||!sku){el.textContent='Product details will appear here once you select a SKU.';return;}
   el.innerHTML='<strong>'+p.name+'</strong><br>Units/case: <strong>'+p.unitsPerCase+'</strong> &nbsp;·&nbsp; Case weight: <strong>'+p.caseWeight+' kg</strong> &nbsp;·&nbsp; Cases/pallet (default): <strong>'+p.casesOnPallet+'</strong><br>TUC: <strong>'+p.tuc+'</strong><br>Info: <strong>'+p.info+'</strong>';
   document.getElementById('f-cases').placeholder='Default: '+p.casesOnPallet;
+  var infoEl=document.getElementById('f-info');
+  if(infoEl&&!infoEl.dataset.edited)infoEl.value=p.info||'';
+}
+function validateSKU(){
+  var sku=document.getElementById('f-sku').value.trim();
+  var errEl=document.getElementById('sku-error');
+  if(sku&&!products[sku]){
+    if(errEl)errEl.style.display='';
+    document.getElementById('f-sku').value='';
+    document.getElementById('product-preview').textContent='Product details will appear here once you select a SKU.';
+    var infoEl=document.getElementById('f-info');
+    if(infoEl){infoEl.value='';delete infoEl.dataset.edited;}
+  }else{
+    if(errEl)errEl.style.display='none';
+  }
 }
 
-// ── Counter ───────────────────────────────────────────────────────────────────
-async function loadCounter(){
-  if(!counterListId)return;
-  try{
-    var data=await graph('GET','/sites/'+siteId+'/lists/'+counterListId+'/items?$expand=fields&$top=1');
-    if(data.value.length>0){
-      var f=data.value[0].fields;
-      counterItemId=data.value[0].id;
-      serialRef=parseInt(f.SerialRef)||1;
-      cfg.prefix=f.GS1Prefix||cfg.prefix;
-      cfg.ext=parseInt(f.ExtDigit)>=0?parseInt(f.ExtDigit):cfg.ext;
-      updateSettingsForm();
-    }else{
-      var created=await graph('POST','/sites/'+siteId+'/lists/'+counterListId+'/items',{fields:{Title:'config',SerialRef:1,GS1Prefix:cfg.prefix,ExtDigit:cfg.ext}});
-      counterItemId=created.id;
-    }
-  }catch(e){toast('Could not load counter: '+e.message,true);}
-}
-async function incrementCounter(){
-  serialRef++;
-  if(!counterItemId)return;
-  try{await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{SerialRef:serialRef});}
-  catch(e){toast('Warning: counter not saved — '+e.message,true);}
-}
-async function saveSettings(){
-  var p=document.getElementById('s-prefix').value.replace(/\D/g,'');
-  var e=parseInt(document.getElementById('s-ext').value);
-  if(p.length<7||p.length>10){alert('Prefix must be 7–10 digits');return;}
-  if(isNaN(e)||e<0||e>9){alert('Extension digit must be 0–9');return;}
-  cfg.prefix=p;cfg.ext=e;
-  try{
-    await graph('PATCH','/sites/'+siteId+'/lists/'+counterListId+'/items/'+counterItemId+'/fields',{GS1Prefix:p,ExtDigit:e});
-    updateSSCCPreview();toast('Settings saved');
-  }catch(e2){toast('Save failed: '+e2.message,true);}
-}
-
-// ── SSCC ──────────────────────────────────────────────────────────────────────
 function gs1Check(d17){var s=0;for(var i=0;i<17;i++)s+=parseInt(d17[i])*(i%2===0?3:1);return(10-(s%10))%10;}
 function buildSSCC(ext,prefix,serial){
   var sd=17-1-prefix.length;if(sd<1)return null;
@@ -512,7 +498,7 @@ function collectForm(){
     bbe:document.getElementById('f-bbe').value,
     cases:document.getElementById('f-cases').value||String(p.casesOnPallet)||'',
     caseWeight:String(p.caseWeight||''),unitsPerCase:String(p.unitsPerCase||''),
-    tuc:String(p.tuc||''),info:String(p.info||''),
+    tuc:String(p.tuc||''),info:(document.getElementById('f-info')&&document.getElementById('f-info').value.trim())||String(p.info||''),
     numPallets:parseInt(document.getElementById('f-pallets').value)||1
   };
 }
@@ -521,6 +507,7 @@ function clearForm(){
   document.getElementById('f-batch').value='';
   document.getElementById('f-bbe').value='';document.getElementById('f-cases').value='';
   document.getElementById('f-pallets').value='1';
+  var infoEl=document.getElementById('f-info');if(infoEl){infoEl.value='';delete infoEl.dataset.edited;}
   document.getElementById('product-preview').textContent='Product details will appear here once you select a SKU.';
 }
 function validate(d){
@@ -610,6 +597,8 @@ function renderHistory(){
     var typeBadge=r.printType==='Case Label'
       ?'<span style="background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Case</span>'
       :'<span style="background:#f0f0ee;color:#555;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Pallet</span>';
+    var infoTrunc=r.info&&r.info.length>25?r.info.substring(0,25)+'…':r.info||'—';
+    html+='<td title="'+(r.info||'')+'" style="max-width:130px">'+infoTrunc+'</td>';
     html+='<td>'+typeBadge+'</td>';
     html+='<td>'+statusBadge+'</td>';
     html+='<td style="color:#aaa;font-size:11px">'+shortUser+'</td>';
@@ -848,17 +837,28 @@ function doPrint(recs){
       y+=15;
 
       divider(y);
+      var unitsOnPallet=(r.cases&&r.unitsPerCase)?String(parseInt(r.cases)*parseInt(r.unitsPerCase)):'-';
       var cols=[4,W/4+2,W/2+2,W*3/4+2];
       lbl('Units per Case',cols[0],y+4);val(r.unitsPerCase||'-',cols[0],y+9);
-      lbl('Cases on Pallet',cols[1],y+4);val(casesDisp,cols[1],y+9);
+      lbl('Units on Pallet',cols[1],y+4);val(unitsOnPallet,cols[1],y+9);
       lbl('Case Weight',cols[2],y+4);val(caseWeightDisp,cols[2],y+9);
       lbl('Total Weight',cols[3],y+4);val(totalWeight,cols[3],y+9);
       y+=14;
 
       divider(y);
       lbl('Information',4,y+4);
+      var qrSz=10;
+      try{
+        var qrC=document.createElement('canvas');
+        qrC.style.cssText='position:absolute;left:-9999px;top:-9999px;opacity:0';
+        document.body.appendChild(qrC);
+        QRCode.toCanvas(qrC,r.batch||'NO-BATCH',{width:Math.round(qrSz*96/25.4),margin:0,color:{dark:'#000000',light:'#ffffff'}},function(err){
+          if(!err){try{doc.addImage(qrC.toDataURL('image/png'),'PNG',W-qrSz-2,y+1,qrSz,qrSz);}catch(e2){}}
+          try{document.body.removeChild(qrC);}catch(e3){}
+        });
+      }catch(qrErr){console.warn('QR:',qrErr);}
       doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
-      doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-8});
+      doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-qrSz-10});
       y+=14;
 
 
