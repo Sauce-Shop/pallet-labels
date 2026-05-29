@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.5</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -597,8 +597,8 @@ function renderHistory(){
     var typeBadge=r.printType==='Case Label'
       ?'<span style="background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Case</span>'
       :'<span style="background:#f0f0ee;color:#555;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Pallet</span>';
-        var infoTrunc=r.info&&r.info.length>25?r.info.substring(0,25)+'…':r.info||'—';
-    html+='<td style="max-width:130px;color:#888;font-size:11px" title="'+(r.info||'').replace(/"/g,"'")+'">'+infoTrunc+'</td>';
+            var infoShort=(r.info||'').length>20?(r.info||'').substring(0,20)+'...':r.info||'-';
+    html+='<td style="max-width:120px;color:#888;font-size:11px">'+infoShort+'</td>';
     html+='<td>'+typeBadge+'</td>';
     html+='<td>'+statusBadge+'</td>';
     html+='<td style="color:#aaa;font-size:11px">'+shortUser+'</td>';
