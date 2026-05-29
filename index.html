@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.3</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.4</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -570,7 +570,7 @@ function renderHistory(){
   });
   filtered.sort(function(a,b){var dd=new Date(b.ts).setSeconds(0,0)-new Date(a.ts).setSeconds(0,0);return dd!==0?dd:(a.palletNumber||0)-(b.palletNumber||0);});
   if(!filtered.length){body.innerHTML='<div class="empty">No records found</div>';return;}
-  var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU / Product</th><th>Batch</th><th>BBE</th><th>#</th><th>Cases</th><th>Type</th><th>Status</th><th>By</th><th></th></tr></thead><tbody>';
+  var html='<table class="tbl"><thead><tr><th><input type="checkbox" id="sel-all" onchange="toggleAll(this)"></th><th>Date</th><th>SSCC</th><th>SKU / Product</th><th>Batch</th><th>BBE</th><th>#</th><th>Cases</th><th>Info</th><th>Type</th><th>Status</th><th>By</th><th></th></tr></thead><tbody>';
   filtered.forEach(function(r){
     var isDNP=r.status==='Did Not Produce';
     var productDefault=products[r.sku]?String(products[r.sku].casesOnPallet):'';
@@ -597,8 +597,8 @@ function renderHistory(){
     var typeBadge=r.printType==='Case Label'
       ?'<span style="background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Case</span>'
       :'<span style="background:#f0f0ee;color:#555;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">Pallet</span>';
-    var infoTrunc=r.info&&r.info.length>25?r.info.substring(0,25)+'…':r.info||'—';
-    html+='<td title="'+(r.info||'')+'" style="max-width:130px">'+infoTrunc+'</td>';
+        var infoTrunc=r.info&&r.info.length>25?r.info.substring(0,25)+'…':r.info||'—';
+    html+='<td style="max-width:130px;color:#888;font-size:11px" title="'+(r.info||'').replace(/"/g,"'")+'">'+infoTrunc+'</td>';
     html+='<td>'+typeBadge+'</td>';
     html+='<td>'+statusBadge+'</td>';
     html+='<td style="color:#aaa;font-size:11px">'+shortUser+'</td>';
