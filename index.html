@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.6</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v5.9</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -514,8 +514,19 @@ async function loadHistory(){
   if(!labelsListId){toast('Not connected',true);return;}
   document.getElementById('history-body').innerHTML='<div class="empty">Loading…</div>';
   try{
-    var data=await graph('GET','/sites/'+siteId+'/lists/'+labelsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=500&$select=id,createdDateTime,fields');
-    allRecords=data.value.map(function(item){
+    var allItems=[];
+    var url='/sites/'+siteId+'/lists/'+labelsListId+'/items?$expand=fields&$orderby=createdDateTime desc&$top=500&$select=id,createdDateTime,fields';
+    while(url){
+      var data=await graph('GET',url);
+      allItems=allItems.concat(data.value);
+      // Follow @odata.nextLink if present (strip the graph base URL)
+      if(data['@odata.nextLink']){
+        url=data['@odata.nextLink'].replace('https://graph.microsoft.com/v1.0','');
+      }else{
+        url=null;
+      }
+    }
+    allRecords=allItems.map(function(item){
       var f=item.fields;
       return{id:f.RecordID||item.id,spId:item.id,sscc:f.Title||'',sku:f.SKU||'',name:f.ProductName||'',batch:f.BatchNumber||'',bbe:f.BestBefore||'',cases:f.CasesOnPallet!=null?String(f.CasesOnPallet):'',caseWeight:f.CaseWeight!=null?String(f.CaseWeight):'',tuc:f.TUC||'',info:f.Info||'',generatedBy:f.GeneratedBy||'',ts:item.createdDateTime,palletNumber:f.PalletNumber||1,batchTotal:f.BatchTotal||1,status:f.Status||'Produced',printType:f.PalletType||'Pallet Label'};
     });
@@ -842,11 +853,11 @@ function renderVerifyLog(){
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
-function doPrint(recs){
+async function doPrint(recs){
   if(!window.jspdf){toast('PDF library not loaded — reload the page',true);return;}
   try{
     var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
-    recs.forEach(function(r,pageIndex){
+    for(var pageIndex=0;pageIndex<recs.length;pageIndex++){ var r=recs[pageIndex];
       if(pageIndex>0)doc.addPage('a5','portrait');
       var totalWeight=r.cases&&r.caseWeight?(parseFloat(r.cases)*parseFloat(r.caseWeight)).toFixed(0)+' KG':'-';
       var casesDisp=r.cases||'-';
@@ -885,13 +896,8 @@ function doPrint(recs){
       lbl('Information',4,y+4);
       var qrSz=10;
       try{
-        var qrC=document.createElement('canvas');
-        qrC.style.cssText='position:absolute;left:-9999px;top:-9999px;opacity:0';
-        document.body.appendChild(qrC);
-        QRCode.toCanvas(qrC,r.batch||'NO-BATCH',{width:Math.round(qrSz*96/25.4),margin:0,color:{dark:'#000000',light:'#ffffff'}},function(err){
-          if(!err){try{doc.addImage(qrC.toDataURL('image/png'),'PNG',W-qrSz-2,y+1,qrSz,qrSz);}catch(e2){}}
-          try{document.body.removeChild(qrC);}catch(e3){}
-        });
+        var qrDataUrl=await QRCode.toDataURL(r.batch||'NO-BATCH',{width:Math.round(qrSz*96/25.4),margin:0,color:{dark:'#000000',light:'#ffffff'}});
+        doc.addImage(qrDataUrl,'PNG',W-qrSz-2,y+1,qrSz,qrSz);
       }catch(qrErr){console.warn('QR:',qrErr);}
       doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
       doc.text(String(r.info||'-'),4,y+9,{maxWidth:W-qrSz-10});
@@ -937,7 +943,7 @@ function doPrint(recs){
       doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);
       var byText=r.generatedBy||(currentAccount?(currentAccount.name||currentAccount.username):'');
       doc.text('Generated: '+fmtDate(r.ts)+'   By: '+byText,W/2,y+4,{align:'center',maxWidth:W-8});
-    });
+    }
 
     var now=new Date();
     var ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
