@@ -1054,7 +1054,7 @@ function doCasePrint(r){
     while(infoText.length>0&&doc.getTextWidth(infoText+(batchText?' — '+batchText:''))>maxInfoW){
       infoText=infoText.substring(0,infoText.length-1);
     }
-    var footerText=infoText+(infoText&&batchText?' — ':'')+batchText;
+    var footerText=infoText+(infoText&&?' — ':'')+batchText;
     doc.text(footerText, W/2, H-1.5, {align:'center'});
 
     // Save
