@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.4</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.5</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -1047,15 +1047,7 @@ function doCasePrint(r){
 
     // ── Info footer ────────────────────────────────────────────────────────
     doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,80);
-    var infoText=String(r.info||'');
-    var batchText=String(r.batch||'');
-    // Truncate info if too wide to fit on one line with batch
-    var maxInfoW=W-4;
-    while(infoText.length>0&&doc.getTextWidth(infoText+(batchText?' — '+batchText:''))>maxInfoW){
-      infoText=infoText.substring(0,infoText.length-1);
-    }
-    var footerText=infoText+(infoText&&?' — ':'')+batchText;
-    doc.text(footerText, W/2, H-1.5, {align:'center'});
+    doc.text(String(r.info||''), W/2, H-1.5, {align:'center', maxWidth:W-4});
 
     // Save
     var now=new Date();
