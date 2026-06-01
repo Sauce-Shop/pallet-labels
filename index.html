@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.0</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.1</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -1013,8 +1013,8 @@ function doCasePrint(r){
     doc.text(nameStr, logoW+4, 14);
 
     // ── Code + Weight row ──────────────────────────────────────────────────
-    if(r.info){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(0,0,0);doc.text(String(r.info),3,19,{maxWidth:W-6});}
-    var codeY=r.info?24:22;
+    if(r.info){doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,80);doc.text(String(r.info),3,19,{maxWidth:W-6});}
+    var codeY=r.info?23:22;
     doc.setFont('helvetica','normal');doc.setFontSize(8);
     doc.text('Code: '+r.batch, 3, codeY);
     doc.text('Weight (KG): '+r.caseWeight, W/2, codeY, {align:'center'});
@@ -1027,7 +1027,7 @@ function doCasePrint(r){
       var d14=tucStr.replace(/\D/g,'');
       tucFormatted=d14[0]+' '+d14.substring(1,3)+' '+d14.substring(3,8)+' '+d14.substring(8,13)+' '+d14[13];
     }
-    var tucNumY=r.info?29:27;
+    var tucNumY=27;
     doc.setFont('helvetica','normal');doc.setFontSize(8);
     doc.text(tucFormatted, W/2, tucNumY, {align:'center'});
 
@@ -1036,7 +1036,7 @@ function doCasePrint(r){
       var barcodeH=16;
       var barcodeW=W-6;
       var barcodeX=W/2-barcodeW/2;
-      var barcodeY=r.info?31:29;
+      var barcodeY=29;
       var bearerH=1.2; // Bearer bar thickness mm
       // Draw barcode
       addBarcodeToDoc(doc,r.tuc,'ITF14',W/2,barcodeY,barcodeW,barcodeH);
