@@ -85,7 +85,7 @@ const CONFIG = {
   <div class="topbar">
     <div>
       <div style="font-size:19px;font-weight:700;letter-spacing:-.01em">Sauce Shop</div>
-      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.1</span></div>
+      <div style="font-size:13px;color:#888;margin-top:1px">Pallet Label System <span style="font-size:11px;background:#e8e7e4;padding:2px 7px;border-radius:99px;margin-left:4px">v6.2</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="user-bar"><span id="user-name"></span><button onclick="signOut()">Sign out</button></div>
@@ -1013,8 +1013,7 @@ function doCasePrint(r){
     doc.text(nameStr, logoW+4, 14);
 
     // ── Code + Weight row ──────────────────────────────────────────────────
-    if(r.info){doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,80);doc.text(String(r.info),3,19,{maxWidth:W-6});}
-    var codeY=r.info?23:22;
+    var codeY=22;
     doc.setFont('helvetica','normal');doc.setFontSize(8);
     doc.text('Code: '+r.batch, 3, codeY);
     doc.text('Weight (KG): '+r.caseWeight, W/2, codeY, {align:'center'});
@@ -1046,9 +1045,10 @@ function doCasePrint(r){
       doc.rect(barcodeX, barcodeY+barcodeH-bearerH, barcodeW, bearerH, 'F');
     }
 
-    // ── Batch bottom right ─────────────────────────────────────────────────
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,120,120);
-    doc.text(r.batch, W-3, H-2, {align:'right'});
+    // ── Info footer ────────────────────────────────────────────────────────
+    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,80);
+    var footerText=(r.info||'')+( r.info&&r.batch?' — ':'')+r.batch;
+    doc.text(footerText, W/2, H-1.5, {align:'center', maxWidth:W-4});
 
     // Save
     var now=new Date();
